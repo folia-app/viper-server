@@ -1,0 +1,12 @@
+{
+  "watch": true,
+  "script": "bin/www",
+  "ignore_watch": [
+    "node_modules",
+    "output",
+    "public"
+  ],
+  "watch_options": {
+    "followSymlinks": false
+  }
+}

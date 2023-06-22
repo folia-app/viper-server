@@ -1,0 +1,17 @@
+doctype html
+html
+  head
+    title= "Viper"
+    link(rel='stylesheet', href='/stylesheets/all.css')
+  body
+
+    each group, index in files
+      h1= index + 1
+      .group
+        each file, indexx in group
+          - var bar = file.split("-").join("/")
+          img(src=`/get/img/${bar}`)
+        - var foo =  (index + 1).toString().padStart(4, '0')
+        img(src='/get/img/' + foo + '/010')
+
+

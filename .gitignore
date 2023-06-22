@@ -1,0 +1,15 @@
+.DS_Store
+**/.DS_Store
+node_modules
+go/*
+output/*
+.env
+raw/*
+json/
+yarn.lock
+
+public/gifs/*
+public/old/
+public/old-2/
+
+.env.local
