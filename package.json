@@ -20,6 +20,6 @@
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
     "morgan": "~1.9.1",
-    "viper": "git+ssh://git@github.com/folia-app/viper.git#57b52c19c05a06be2bb938ce5cde085ba94fce97"
+    "viper": "git+ssh://git@github.com/folia-app/viper.git#2a62c1ae83178b7b193f8978f3957a5a0bf770c4"
   }
 }
