@@ -17,7 +17,7 @@ const maxSpawns = cores > 1 ? cores - 1 : 1
 console.log(`max spawns: ${maxSpawns}`)
 const preload = 468
 const minLength = 1
-const maxLength = 100
+const maxLength = 60
 
 
 let totalTime = 0
