@@ -3,6 +3,10 @@ var router = express.Router();
 const fs = require('fs');
 const { utils } = require("ethers");
 const path = require('path')
+
+const { Viper } = require('viper-contracts')
+console.log({ Viper })
+
 /* GET home page. */
 router.get('/', function (req, res, next) {
   res.render('index', { title: 'Viper' });
@@ -17,36 +21,39 @@ router.get('/v1/metadata/*', function (req, res, next) {
   if (tokenId.substring(0, 2) == "0x") {
     tokenId = utils.BigNumber.from(tokenId).toString()
   }
-  var tokenIdInHex = utils.BigNumber.from(tokenId).toHexString()
+  // var tokenIdInHex = utils.BigNumber.from(tokenId).toHexString()
 
-  let rawdata
-  try {
-    rawdata = fs.readFileSync(`json/${tokenIdInHex}.json`);
-  } catch (error) {
-    return res.status(404).send(error)
-  }
+  // let rawdata
+  // try {
+  //   rawdata = fs.readFileSync(`json/${tokenId}.json`);
+  // } catch (error) {
+  //   return res.status(404).send(error)
+  // }
 
   let baseURL = process.env.baseURL
 
-  let data = JSON.parse(rawdata);
-  var contractAddress = data.asset_contract.address
-  var originalTokenId = data.token_id
-  var contractName = data.asset_contract.name
-  var tokenName = data.name
-
-  var originalImage = `${baseURL}/get/original/${contractAddress}/${originalTokenId}`
-  var newImage = `${baseURL}/get/${contractAddress}/${originalTokenId}`
-
-  var gifEndpoint = `${baseURL}/gif/${tokenIdInHex}`
-
-  var properties = {
-    collection: contractName
+  // let data = JSON.parse(rawdata);
+  let data = {
+    name: `Viper ${tokenId}`,
+    asset_contract: {
+      name: "Viper",
+      address: Viper["networks"]['11155111']["address"],
+    },
+    token_id: tokenId,
   }
+  const length = 2
 
-  var image_url = newImage
+
+  var image = `${baseURL}/get/img/${tokenId}/${length}`
+  var animation_url = `${baseURL}/get/iframe#${tokenId}-${length}`
+  // var properties = {
+  //   collection: `Viper ${tokenId}`,
+  // }
+
+  // var image_url = newImage
   var description = `Viper is.... ~ presented by [Folia](https://folia.app)`
 
-  var name = `Viper ${tokenName}`
+  var name = `Viper ${tokenId}`
 
   // the sauce
   const metadata = {
@@ -68,13 +75,13 @@ router.get('/v1/metadata/*', function (req, res, next) {
     home_url: 'https://viper.folia.app/tokens/' + tokenId,
 
     // opensea
-    image: image_url,
+    image: image,
     // rarebits
-    image_url,
+    image_url: image,
 
     // opensea
     // attributes: token.attributes || [],
-    properties: properties || [],
+    // properties: properties || [],
     // attributes: [
     //   {
     //     trait_type: 'artist',
@@ -94,7 +101,7 @@ router.get('/v1/metadata/*', function (req, res, next) {
     // tags: ['cool', 'hot', 'mild']
 
     // open sea
-    animation_url: gifEndpoint,
+    animation_url,
 
     // optimized for folia site
     // animation_url_optim: asset(work, tokenId, 'animation_url_optim'),

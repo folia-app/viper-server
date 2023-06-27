@@ -9,7 +9,6 @@
   },
   "license": "ISC",
   "dependencies": {
-    "canvas": "2.11.2",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
     "debug": "~2.6.9",
@@ -20,6 +19,7 @@
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
     "morgan": "~1.9.1",
-    "viper": "git+ssh://git@github.com/folia-app/viper.git#2a62c1ae83178b7b193f8978f3957a5a0bf770c4"
+    "viper": "git+ssh://git@github.com/folia-app/viper.git#be1e53bd63b7d1337cec9fc9942fef2c696f2499",
+    "viper-contracts": "git+ssh://git@github.com/folia-app/viper-contracts.git#47a21d49169c6018884b3d3b6e678fad87b8dd4e"
   }
 }

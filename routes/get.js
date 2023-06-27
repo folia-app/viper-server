@@ -2,6 +2,8 @@ var express = require('express');
 const { ethers, utils } = require("ethers");
 require('dotenv').config()
 const fs = require('fs');
+
+// const { Viper } = require('viper')
 const stream = require('stream')
 const { Gone } = require('http-errors');
 const { generateGif, generatePlaceholder, generatePlaceholderAndGif } = require('../render.js');
@@ -10,6 +12,26 @@ var boo = function (res, int) {
   return res.status(404).send(int.toString() || '404')
 }
 var router = express.Router();
+
+router.get('/iframe', async function (req, res, next) {
+  // const params = req.params[0].split("/")
+  // var tokenId = parseInt(params[0], 10)
+  // var viperLength = parseInt(params[1], 10)
+
+  // Assuming the current file is in a different location than the "viper" package
+  const viperIndexPath = require.resolve('viper/dist/index.html');
+  // const viperDirectory = path.dirname(viperIndexPath);
+  // const indexPath = path.join(viperDirectory, 'index.html');
+
+  // Read the contents of the index.html file
+  // const html = fs.readFileSync(indexPath, 'utf8');
+
+  // Use the html variable as needed
+  // console.log(html);
+  return returnFile(viperIndexPath, req, res, next)
+
+
+})
 
 router.get('/img/*', async function (req, res, next) {
 
@@ -21,7 +43,7 @@ router.get('/img/*', async function (req, res, next) {
     return res.status(404).send("no token id")
   }
   if (!viperLength || !Number.isInteger(viperLength)) {
-    viperLength = 6
+    viperLength = 1
   }
   // get viper length from chain
 
