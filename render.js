@@ -43,7 +43,7 @@ const queueChecker = setInterval(() => {
   while (queue.length > 0 && currentSpawns.length < maxSpawns) {
     console.log('spawning')
     const next = queue.shift()
-    console.log(`next: ${next}`)
+    console.log(`next: ${next}`, `There are ${currentSpawns.length} current spawns, and ${queue.length} in the queue. The max spawn is ${maxSpawns}`)
     const [tokenId, viperLength] = next.split("-")
     generateGif(tokenId, viperLength)
   }
@@ -105,6 +105,8 @@ var generateGif = async function (tokenId, viperLength) {
     return
   }
 
+  currentSpawns.push(`${formatName(tokenId, viperLength)}`)
+
   // check if gif is already generated
   // if so, return gif
   const filename = path.join(__dirname, `public/gifs/${formatName(tokenId, viperLength)}/complete.gif`)
@@ -115,7 +117,6 @@ var generateGif = async function (tokenId, viperLength) {
     return
   } catch (_) { }
 
-  currentSpawns.push(`${formatName(tokenId, viperLength)}`)
 
   const start = new Date().getTime();
 
