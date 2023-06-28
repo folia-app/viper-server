@@ -1,7 +1,6 @@
 const { ethers } = require("ethers");
 
 function extractBiteId(tokenId) {
-  console.log(`extract info from tokenId ${tokenId.toString()}`)
   tokenId = ethers.BigNumber.from(tokenId)
   // length is tokenId bit shifted right 169 bits
   const length = tokenId.shr(169)

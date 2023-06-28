@@ -44,16 +44,16 @@ function returnViper(tokenId, req, res, next) {
 router.get('/img/*', async function (req, res, next) {
 
   const params = req.params[0].split("/")
-  var tokenId = parseInt(params[0], 10)
+  var tokenId = params[0]
   var viperLength = parseInt(params[1], 10)
 
-  if (!tokenId || !Number.isInteger(tokenId)) {
+  if (!tokenId) {
     return boo(res, "no token id")
   }
   if (!viperLength || !Number.isInteger(viperLength)) {
     viperLength = 1
   }
-  // get viper length from chain
+  // TODO: get viper length from chain
 
   try {
     const filename = await generatePlaceholderAndGif(tokenId, viperLength)
