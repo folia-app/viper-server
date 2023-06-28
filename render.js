@@ -2,7 +2,7 @@ const { ethers, utils } = require("ethers");
 // var fetch = require("node-fetch")
 const fs = require('fs');
 const client = require('https');
-const { Viper } = require('viper')
+// const { Viper } = require('viper')
 const { createCanvas, loadImage } = require('canvas')
 const { spawn } = require('child_process');
 const path = require('path')
@@ -15,8 +15,7 @@ var os = require('os');
 var cores = os.cpus().length
 const maxSpawns = cores > 2 ? cores - 2 : 1
 console.log(`max spawns: ${maxSpawns}`)
-const v = new Viper({ setting: "server" })
-const preload = v.allVipers.length
+const preload = 468
 const minLength = 1
 const maxLength = 60
 
