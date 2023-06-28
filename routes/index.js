@@ -3,9 +3,9 @@ var router = express.Router();
 const fs = require('fs');
 const { utils } = require("ethers");
 const path = require('path')
+const { ethers } = require("ethers");
 
-const { Viper } = require('viper-contracts')
-console.log({ Viper })
+// const { Viper } = require('viper-contracts')
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -14,97 +14,58 @@ router.get('/', function (req, res, next) {
 
 router.get('/v1/metadata/*', function (req, res, next) {
   let tokenId = req.params[0]
-  // const params = req.params[0].split("/")
-  // var contractAddress = params[0]
-  // var originalTokenId = params[1]
-  // var tokenId = utils.solidityKeccak256([ "address", "uint256" ], [ contractAddress, originalTokenId ])
+
   if (tokenId.substring(0, 2) == "0x") {
     tokenId = utils.BigNumber.from(tokenId).toString()
   }
-  // var tokenIdInHex = utils.BigNumber.from(tokenId).toHexString()
-
-  // let rawdata
-  // try {
-  //   rawdata = fs.readFileSync(`json/${tokenId}.json`);
-  // } catch (error) {
-  //   return res.status(404).send(error)
-  // }
+  const owner = ethers.constants.AddressZero // TODO: fix
+  const length = 2 // TODO: fix
 
   let baseURL = process.env.baseURL
 
-  // let data = JSON.parse(rawdata);
-  let data = {
-    name: `Viper ${tokenId}`,
-    asset_contract: {
-      name: "Viper",
-      address: Viper["networks"]['11155111']["address"],
-    },
-    token_id: tokenId,
-  }
-  const length = 2
-
-
   var image = `${baseURL}/get/img/${tokenId}/${length}`
   var animation_url = `${baseURL}/get/iframe#${tokenId}-${length}`
-  // var properties = {
-  //   collection: `Viper ${tokenId}`,
-  // }
-
-  // var image_url = newImage
-  var description = `Viper is.... ~ presented by [Folia](https://folia.app)`
-
-  var name = `Viper ${tokenId}`
 
   // the sauce
   const metadata = {
     // both opensea and rarebits
-    name,
+    name: `Viper No ${tokenId}`,
+    owner,
 
-    // owner: owner,
-    // name: `${doc.data.artist}, "${doc.data.title}", ${doc.data.year} (${printNo}/${doc.data.edition})`,
-
-    description, // by token ID?
-    // description: doc.data.description[0].text ?? '',
-
-    // all assets related to the work (posterity)
-    // directory: token.directory || work.directory,
+    description: `Viper is.... ~ presented by [Folia](https://folia.app)`,
 
     // opensea
-    external_url: 'https://viper.folia.app/tokens/' + tokenId,
+    external_url: baseURL,// 'https://viper.folia.app/tokens/' + tokenId, // TODO: add back once ready
     // rarebits
-    home_url: 'https://viper.folia.app/tokens/' + tokenId,
+    home_url: baseURL,//'https://viper.folia.app/tokens/' + tokenId, //TODO: add back once ready
 
     // opensea
-    image: image,
+    image,
+
     // rarebits
     image_url: image,
 
-    // opensea
-    // attributes: token.attributes || [],
-    // properties: properties || [],
-    // attributes: [
-    //   {
-    //     trait_type: 'artist',
-    //     value: doc.data.artist
-    //   },
-    //   {
-    //     trait_type: 'year',
-    //     value: doc.data.year
-    //   }
-    // ],
-    // rarebits
-    // properties: [
-    //   { key: 'zodiac', value: returnZodiac(tokenId), type: 'string' }
-    // ],
-
-    // rarebits
-    // tags: ['cool', 'hot', 'mild']
-
-    // open sea
+    // animation
     animation_url,
 
+    // opensea
+    attributes: [
+      // {
+      //   trait_type: 'eyes',
+      //   value: eyes[eye]
+      // },
+      // {
+      //   trait_type: 'mouth',
+      //   value: mouths[mouth]
+      // }
+    ],
+    // rarebits
+    properties: [
+      // { key: 'eyes', value: eyes[eye], type: 'string' },
+      // { key: 'mouth', value: mouths[mouth], type: 'string' }
+    ],
     // optimized for folia site
-    // animation_url_optim: asset(work, tokenId, 'animation_url_optim'),
+    // animation_url_optim: animation_url,
     // animation_loop: token.animation_loop ?? work.animation_loop ?? false,
     // background: token.background ?? work.background ?? '',
 
@@ -118,6 +79,8 @@ router.get('/v1/metadata/*', function (req, res, next) {
     // sha hashes for posterity (annoying for works with many files... IPFS is source file...)
     // sha256: work.sha256 || {}
   }
+
+
 
   res.json(metadata);
 
@@ -149,33 +112,6 @@ router.get('/all/', async function (req, res, next) {
   res.render('all', { files: groups });
 
 })
-
-// router.get('/gif/*', function (req, res, next) {
-//   let tokenId = req.params[0]
-//   console.log({ tokenId })
-//   if (tokenId.substring(0, 2) != '0x') {
-//     tokenId = utils.BigNumber.from(tokenId).toHexString()
-//     // tokenId = parseInt(tokenId).toString(16)
-//     console.log({ tokenId })
-//   }
-//   // const params = req.params[0].split("/")
-//   // var contractAddress = params[0]
-//   // var originalTokenId = params[1]
-//   // var tokenId = utils.solidityKeccak256([ "address", "uint256" ], [ contractAddress, originalTokenId ])
-//   let rawdata
-//   try {
-//     rawdata = fs.readFileSync(`json/${tokenId}.json`);
-//   } catch (error) {
-//     return res.status(404).send(error)
-//   }
-//   let data = JSON.parse(rawdata);
-//   var contractAddress = data.asset_contract.address
-//   var originalTokenId = data.token_id
-//   var contractName = data.asset_contract.name
-//   var tokenName = data.name
-
-//   res.render('gif', { contractAddress, originalTokenId, contractName, tokenName });
-// });
 
 
 module.exports = router;
