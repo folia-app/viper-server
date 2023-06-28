@@ -15,18 +15,16 @@ var os = require('os');
 var cores = os.cpus().length
 const maxSpawns = cores > 2 ? cores - 2 : 1
 console.log(`max spawns: ${maxSpawns}`)
-
 const v = new Viper({
   setting: "server"
 })
-const preload = v.allVipers.length
+const GENERATE_GIFS = process.env.GENERATE_GIFS == "true" ? true : false
+const preload = GENERATE_GIFS ? v.allVipers.length : 0
 const minLength = 1
 const maxLength = 60
 
-
 let totalTime = 0
 let numberOfVipers = 0
-
 
 const formatName = function (tokenId, length) {
   const paddedTokenId = String(tokenId).padStart(4, '0')

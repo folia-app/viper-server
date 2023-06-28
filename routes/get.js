@@ -1,9 +1,8 @@
 var express = require('express');
 const { ethers, utils } = require("ethers");
-require('dotenv').config()
 const fs = require('fs');
-
-// const { Viper } = require('viper')
+const { extractBiteId } = require('../utils.js')
+const { Viper } = require('viper')
 const stream = require('stream')
 const { Gone } = require('http-errors');
 const { generateGif, generatePlaceholder, generatePlaceholderAndGif } = require('../render.js');
@@ -18,6 +17,30 @@ router.get('/iframe', async function (req, res, next) {
   return returnFile(viperIndexPath, req, res, next)
 })
 
+router.get('/viper/*', async function (req, res, next) {
+  const params = req.params[0].split("/")
+  var tokenId = parseInt(params[0], 10)
+  if (!tokenId || !Number.isInteger(tokenId)) {
+    return boo(res, "no token id")
+  }
+  const v = new Viper()
+  if (tokenId > v.allVipers.length) {
+    tokenId = params[0]
+    return returnBite(tokenId, req, res, next)
+  } else {
+    return returnViper(tokenId, req, res, next)
+  }
+})
+
+function returnBite(tokenId, req, res, next) {
+  const { length, originalTokenId, senderAddress } = extractBiteId(tokenId)
+}
+
+function returnViper(tokenId, req, res, next) {
+  // const length = 
+}
+
+
 router.get('/img/*', async function (req, res, next) {
 
   const params = req.params[0].split("/")
@@ -25,7 +48,7 @@ router.get('/img/*', async function (req, res, next) {
   var viperLength = parseInt(params[1], 10)
 
   if (!tokenId || !Number.isInteger(tokenId)) {
-    return res.status(404).send("no token id")
+    return boo(res, "no token id")
   }
   if (!viperLength || !Number.isInteger(viperLength)) {
     viperLength = 1
