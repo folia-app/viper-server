@@ -13,7 +13,7 @@ const currentSpawns = []
 var os = require('os');
 
 var cores = os.cpus().length
-const maxSpawns = cores > 1 ? cores - 1 : 1
+const maxSpawns = cores > 2 ? cores - 2 : 1
 console.log(`max spawns: ${maxSpawns}`)
 const v = new Viper({ setting: "server" })
 const preload = v.allVipers.length
