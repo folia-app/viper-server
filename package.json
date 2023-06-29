@@ -20,6 +20,6 @@
     "jade": "~1.11.0",
     "morgan": "~1.9.1",
     "viper": "git+ssh://git@github.com/folia-app/viper.git#19c7888072c5518151870bf612a2dd27c5955e0e",
-    "viper-contracts": "git+ssh://git@github.com/folia-app/viper-contracts.git#47a21d49169c6018884b3d3b6e678fad87b8dd4e"
+    "viper-contracts": "git+ssh://git@github.com/folia-app/viper-contracts.git#f0aa1267a2c5a63e122f70e311710789a930517f"
   }
 }

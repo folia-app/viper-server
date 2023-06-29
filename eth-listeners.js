@@ -33,25 +33,25 @@ const biteByViperContract = new ethers.Contract(
 )
 
 
-// get all previous Transfer events from biteByViperContract
-biteByViperContract.queryFilter(biteByViperContract.filters.Transfer(), 0)
-  .then((events) => {
-    events.forEach((event) => {
-      var from = event.args[0]
-      var to = event.args[1].toString()
-      var tokenId = ethers.BigNumber.from(event.args[2])
-      const { length, originalTokenId, senderAddress } = extractBiteId(tokenId)
-      console.log({
-        from,
-        to,
-        tokenId: tokenId.toString(),
-        length,
-        originalTokenId,
-        senderAddress
+// // get all previous Transfer events from biteByViperContract
+// biteByViperContract.queryFilter(biteByViperContract.filters.Transfer(), 0)
+//   .then((events) => {
+//     events.forEach((event) => {
+//       var from = event.args[0]
+//       var to = event.args[1].toString()
+//       var tokenId = ethers.BigNumber.from(event.args[2])
+//       const { length, originalTokenId, senderAddress } = extractBiteId(tokenId)
+//       console.log({
+//         from,
+//         to,
+//         tokenId: tokenId.toString(),
+//         length,
+//         originalTokenId,
+//         senderAddress
 
-      })
-    })
-  })
+//       })
+//     })
+//   })
 
 biteByViperContract.on('Transfer', async (...args) => {
   var from = args[0]

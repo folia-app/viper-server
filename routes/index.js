@@ -1,9 +1,9 @@
 var express = require('express');
 var router = express.Router();
 const fs = require('fs');
-const { utils } = require("ethers");
-const path = require('path')
 const { ethers } = require("ethers");
+const path = require('path')
+const { getLength, boo, extractBiteId } = require('../utils.js')
 
 // const { Viper } = require('viper-contracts')
 
@@ -12,32 +12,49 @@ router.get('/', function (req, res, next) {
   res.render('index', { title: 'Viper' });
 });
 
-router.get('/v1/metadata/*', function (req, res, next) {
+router.get('/v1/metadata/*', async function (req, res, next) {
   let tokenId = req.params[0]
 
-  if (tokenId.substring(0, 2) == "0x") {
-    tokenId = utils.BigNumber.from(tokenId).toString()
+  tokenId = ethers.BigNumber.from(tokenId)
+  const isBitten = tokenId.gt(486)
+
+  let { owner, length } = await getLength(tokenId, isBitten)
+
+  if (length.lt(0)) {
+    return boo(res, "Invalid tokenId")
+  } else {
+    length = length.add(1)
   }
-  const owner = ethers.constants.AddressZero // TODO: fix
-  const length = 2 // TODO: fix
 
   let baseURL = process.env.baseURL
 
-  var image = `${baseURL}/get/img/${tokenId}/${length}`
-  var animation_url = `${baseURL}/get/iframe#${tokenId}-${length}`
+  var image = `${baseURL}/get/img/${tokenId}`
+  var animation_url = `${baseURL}/get/iframe#${tokenId}-${length.toString()}`
+  const external_url = baseURL // TODO: fix this
+
+  const name = isBitten ? "Viper Bite by Viper #" + extractBiteId(tokenId).originalTokenId : "Viper #" + tokenId
+
+  let description
+  if (isBitten) {
+    description = `Bite by Viper is the result of an act of aggression. You've been poisoned and there is no cure. To find out more go to ${external_url}.`
+  } else {
+    description = `Viper is.... ~ presented by [Folia](https://folia.app)`
+  }
+
+  //TODO: add viper attributes
 
   // the sauce
   const metadata = {
     // both opensea and rarebits
-    name: `Viper No ${tokenId}`,
+    name,
     owner,
 
-    description: `Viper is.... ~ presented by [Folia](https://folia.app)`,
+    description,
 
     // opensea
-    external_url: baseURL,// 'https://viper.folia.app/tokens/' + tokenId, // TODO: add back once ready
+    external_url,
     // rarebits
-    home_url: baseURL,//'https://viper.folia.app/tokens/' + tokenId, //TODO: add back once ready
+    home_url: external_url,
 
     // opensea
     image,
@@ -50,10 +67,10 @@ router.get('/v1/metadata/*', function (req, res, next) {
 
     // opensea
     attributes: [
-      // {
-      //   trait_type: 'eyes',
-      //   value: eyes[eye]
-      // },
+      {
+        trait_type: 'length',
+        value: length.toNumber()
+      },
       // {
       //   trait_type: 'mouth',
       //   value: mouths[mouth]
@@ -61,7 +78,7 @@ router.get('/v1/metadata/*', function (req, res, next) {
     ],
     // rarebits
     properties: [
-      // { key: 'eyes', value: eyes[eye], type: 'string' },
+      { key: 'length', value: length.toNumber(), type: 'number' },
       // { key: 'mouth', value: mouths[mouth], type: 'string' }
     ],
     // optimized for folia site

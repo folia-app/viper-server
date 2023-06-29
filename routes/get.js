@@ -1,15 +1,13 @@
 var express = require('express');
 const { ethers, utils } = require("ethers");
 const fs = require('fs');
-const { extractBiteId } = require('../utils.js')
+const { extractBiteId, getLength, boo } = require('../utils.js')
 const { Viper } = require('viper')
 const stream = require('stream')
 const { Gone } = require('http-errors');
 const { generateGif, generatePlaceholder, generatePlaceholderAndGif } = require('../render.js');
 const path = require('path')
-var boo = function (res, int) {
-  return res.status(404).send(int.toString() || '404')
-}
+
 var router = express.Router();
 
 router.get('/iframe', async function (req, res, next) {
@@ -47,13 +45,20 @@ router.get('/img/*', async function (req, res, next) {
   var tokenId = params[0]
   var viperLength = parseInt(params[1], 10)
 
-  if (!tokenId) {
-    return boo(res, "no token id")
+  if (!tokenId || parseInt(tokenId) <= 0) {
+    return boo(res, "Invalid tokenId")
+  }
+
+  if (parseInt(tokenId) <= 486) {
+    const { length } = await getLength(tokenId)
+    if (length.lt(0)) {
+      return boo(res, "Invalid tokenId")
+    }
+    viperLength = length.toNumber()
   }
   if (!viperLength || !Number.isInteger(viperLength)) {
     viperLength = 1
   }
-  // TODO: get viper length from chain
 
   try {
     const filename = await generatePlaceholderAndGif(tokenId, viperLength)
