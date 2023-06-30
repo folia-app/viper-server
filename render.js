@@ -5,7 +5,7 @@ const client = require('https');
 const { Viper } = require('viper')
 const { createCanvas, loadImage } = require('canvas')
 const { spawn } = require('child_process');
-const { extractBiteId, refreshOpensea, getNetwork, getProvider } = require('./utils.js')
+const { extractBiteId, refreshOpensea, getNetwork, getProvider, formatName } = require('./utils.js')
 const contracts = require('viper-contracts')
 
 const path = require('path')
@@ -27,21 +27,6 @@ const maxLength = getNetwork() == "homestead" ? 60 : 1
 let totalTime = 0
 let numberOfVipers = 0
 
-const formatName = function (tokenId, length, preserve = true) {
-  let originalTokenId, bitten = false
-  if (String(tokenId).length > 4) {
-    bitten = true;
-    if (tokenId.indexOf("b") > -1) {
-      tokenId = tokenId.replace("b", "")
-    } else {
-      ({ length, originalTokenId } = extractBiteId(tokenId))
-      tokenId = preserve ? tokenId : originalTokenId
-    }
-  }
-  const paddedTokenId = (bitten && !preserve ? "b" : "") + String(tokenId).padStart(4, '0')
-  const paddedLength = String(length).padStart(3, '0')
-  return `${paddedTokenId}/${paddedLength}`
-}
 for (let j = minLength; j <= maxLength; j++) {
   for (let i = 1; i <= preload; i++) {
     queue.push(formatName(i, j))
@@ -167,26 +152,7 @@ const generateGif = async function (tokenId, viperLength) {
       totalTime += duration
       numberOfVipers++
       console.log(`gif completed at : ${filename} in a time of ${duration / 1000} s, average time: ${(totalTime / numberOfVipers) / 1000} s`)
-      let contract
-      if (formatName(tokenId, viperLength).indexOf("b") > -1) {
-        contract = contracts.BiteByViper
-      } else {
-        contract = contracts.Viper
-      }
 
-      // if token exists on chain, refresh it on opensea
-      const instantiaedContract = new ethers.Contract(
-        contract.networks[getNetwork()].address,
-        contract.abi,
-        getProvider()
-      )
-      try {
-        const owner = await instantiaedContract.ownerOf(tokenId.toString())
-        console.log({ owner })
-        refreshOpensea(getNetwork(), contract.networks[getNetwork()].address, tokenId.toString())
-      } catch (e) {
-        console.log('error from ownerOf, token does not exist on chain yet')
-      }
 
     } catch (e) {
       console.log({ e })
@@ -201,6 +167,28 @@ const generateGif = async function (tokenId, viperLength) {
       await optimizeGif(filename)
     } catch (e) {
       console.log(`failed to optimize gif, exited with error:`, { e })
+    }
+
+    // if token exists on chain, refresh it on opensea
+    let contract
+    if (formatName(tokenId, viperLength).indexOf("b") > -1) {
+      contract = contracts.BiteByViper
+    } else {
+      contract = contracts.Viper
+    }
+    const instantiaedContract = new ethers.Contract(
+      contract.networks[getNetwork()].address,
+      contract.abi,
+      getProvider()
+    )
+    let errorFrom = "ownerOf contract call"
+    try {
+      const owner = await instantiaedContract.ownerOf(tokenId.toString())
+      errorFrom = "opensea api call"
+      console.log({ owner })
+      refreshOpensea(getNetwork(), contract.networks[getNetwork()].address, tokenId.toString())
+    } catch (e) {
+      console.log(`refresh metadata error from ${errorFrom}`)
     }
 
     console.log('done trying to optimize gif, OK to remove from queue whether optimization worked or not')

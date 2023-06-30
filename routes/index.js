@@ -3,7 +3,7 @@ var router = express.Router();
 const fs = require('fs');
 const { ethers } = require("ethers");
 const path = require('path')
-const { getLength, boo, extractBiteId } = require('../utils.js')
+const { getLength, boo, extractBiteId, formatName, getNetwork } = require('../utils.js')
 
 // const { Viper } = require('viper-contracts')
 
@@ -27,7 +27,17 @@ router.get('/v1/metadata/*', async function (req, res, next) {
 
   let baseURL = process.env.baseURL
 
+  // check whether image exists, if so add ?c=datetime to the end of the filename
+  const filepath = "../public/" + (getNetwork() == "homestead" ? "" : getNetwork() + "-") + "gifs/"
+  const filename = formatName(tokenId, length, false) + "/complete.gif"
+  const imagePath = path.join(__dirname, filepath, filename)
+
   var image = `${baseURL}/get/img/${tokenId}`
+
+  if (fs.existsSync(imagePath)) {
+    image = image + `?c=${fs.statSync(imagePath).mtimeMs}`
+  }
+
   var animation_url = `${baseURL}/get/iframe#${tokenId}-${length.toString()}`
   const external_url = baseURL // TODO: fix this
 

@@ -35,23 +35,31 @@ function extractBiteId(tokenId) {
 }
 
 var refreshOpensea = function (network, address, tokenID) {
-  // https://testnets-api.opensea.io/api/v1/asset/<your_contract_address>/<token_id>/?force_update=true
-  // https://testnets-api.opensea.io/v2/chain/sepolia/contract/0xc8a395e3b82e515f88e0ef548124c114f16ce9e3/nfts/1?limit=50
-  const subdomain = network == 'homestead' ? 'api' : 'testnets-api'
-  var url = `https://${subdomain}.opensea.io/api/v1/asset/${address}/${tokenID}/?force_update=true`
-  fetch(url)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('OS Network response was not ok, it was ' + response.status)
-      }
-      const contentType = response.headers.get('Content-Type')
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new TypeError('OS Response was not JSON')
-      }
-      return response.json()
-    })
-    .then(data => console.log({ openseaSuccess: data, url }))
-    .catch(error => { console.log({ opeseaError: error, url }) })
+  return new Promise((resolve, reject) => {
+    // https://testnets-api.opensea.io/api/v1/asset/<your_contract_address>/<token_id>/?force_update=true
+    // https://testnets-api.opensea.io/v2/chain/sepolia/contract/0xc8a395e3b82e515f88e0ef548124c114f16ce9e3/nfts/1?limit=50
+    const subdomain = network == 'homestead' ? 'api' : 'testnets-api'
+    var url = `https://${subdomain}.opensea.io/api/v1/asset/${address}/${tokenID}/?force_update=true`
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('OS Network response was not ok, it was ' + response.status)
+        }
+        const contentType = response.headers.get('Content-Type')
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new TypeError('OS Response was not JSON')
+        }
+        return response.json()
+      })
+      .then(data => {
+        console.log({ openseaSuccess: data, url })
+        resolve({ status: 'success', data, url })
+      })
+      .catch(error => {
+        console.log({ opeseaError: error, url })
+        resolve({ status: 'error', data: error, url })
+      })
+  })
 }
 
 async function reverseLookup(address) {
@@ -122,5 +130,22 @@ function boo(res, int) {
 }
 
 
+const formatName = function (tokenId, length, preserve = true) {
+  let originalTokenId, bitten = false
+  if (String(tokenId).length > 4) {
+    bitten = true;
+    if (tokenId.indexOf("b") > -1) {
+      tokenId = tokenId.replace("b", "")
+    } else {
+      ({ length, originalTokenId } = extractBiteId(tokenId))
+      tokenId = preserve ? tokenId : originalTokenId
+    }
+  }
+  const paddedTokenId = (bitten && !preserve ? "b" : "") + String(tokenId).padStart(4, '0')
+  const paddedLength = String(length).padStart(3, '0')
+  return `${paddedTokenId}/${paddedLength}`
+}
+
+
 // export extractBiteId
-module.exports = { extractBiteId, refreshOpensea, reverseLookup, getLength, getOwner, getOwnerOS, boo, getNetwork, getNetworkId, getProvider }
+module.exports = { extractBiteId, refreshOpensea, reverseLookup, getLength, getOwner, getOwnerOS, boo, getNetwork, getNetworkId, getProvider, formatName }

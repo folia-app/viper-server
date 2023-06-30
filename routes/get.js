@@ -1,12 +1,13 @@
 var express = require('express');
 const { ethers, utils } = require("ethers");
 const fs = require('fs');
-const { extractBiteId, getLength, boo, getNetwork } = require('../utils.js')
+const { extractBiteId, getLength, boo, getNetwork, refreshOpensea } = require('../utils.js')
 const { Viper } = require('viper')
 const stream = require('stream')
 const { Gone } = require('http-errors');
-const { generateGif, generatePlaceholder, generatePlaceholderAndGif } = require('../render.js');
+const { generateGif, generatePlaceholder, generatePlaceholderAndGif, addToQueue } = require('../render.js');
 const path = require('path')
+const contracts = require('viper-contracts')
 
 var router = express.Router();
 
@@ -30,33 +31,56 @@ router.get('/iframe', async function (req, res, next) {
   });
 });
 
-router.get('/viper/*', async function (req, res, next) {
+
+router.get('/refresh-os/*', async function (req, res, next) {
   const params = req.params[0].split("/")
-  var tokenId = parseInt(params[0], 10)
-  if (!tokenId || !Number.isInteger(tokenId)) {
-    return boo(res, "no token id")
+  var tokenId = params[0]
+  var viperLength = parseInt(params[1], 10)
+
+  if (!tokenId || parseInt(tokenId) <= 0) {
+    return boo(res, "Invalid tokenId")
   }
-  const v = new Viper()
-  if (tokenId > v.allVipers.length) {
-    tokenId = params[0]
-    return returnBite(tokenId, req, res, next)
+
+  let contractAddress
+  if (parseInt(tokenId) <= 486) {
+    contractAddress = contracts.Viper.networks[getNetwork()].address
+    let { length } = await getLength(tokenId)
+    if (length.lt(0)) {
+      return boo(res, "Invalid tokenId")
+    } else {
+      // need to add 1 because they're 0 indexed
+      length = length.add(1)
+    }
+    viperLength = length.toNumber()
   } else {
-    return returnViper(tokenId, req, res, next)
+    contractAddress = contracts.BiteByViper.networks[getNetwork()].address
   }
+  if (!viperLength || !Number.isInteger(viperLength)) {
+    viperLength = 1
+  }
+
+  const filename = await generatePlaceholderAndGif(tokenId, viperLength)
+  const placeHolderFilename = path.join(__dirname, `public/viper-loading-loop.gif`)
+
+  if (filename != placeHolderFilename) {
+    const response = await refreshOpensea(getNetwork(), contractAddress, tokenId)
+    if (response.status == "success") {
+      return res.status(200).send(response.data)
+    } else {
+      return boo(res, response.data + " (" + response.url + ")")
+    }
+  } else {
+    addToQueue(tokenId, viperLength)
+    return boo(res, "not done generating image")
+  }
+  // return res.status(400).send(err)
 })
-
-function returnBite(tokenId, req, res, next) {
-  const { length, originalTokenId, senderAddress } = extractBiteId(tokenId)
-}
-
-function returnViper(tokenId, req, res, next) {
-  // const length = 
-}
 
 
 router.get('/img/*', async function (req, res, next) {
 
   const params = req.params[0].split("/")
+  console.log({ params })
   var tokenId = params[0]
   var viperLength = parseInt(params[1], 10)
 
