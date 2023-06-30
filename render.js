@@ -5,7 +5,7 @@ const client = require('https');
 const { Viper } = require('viper')
 const { createCanvas, loadImage } = require('canvas')
 const { spawn } = require('child_process');
-const { extractBiteId, refreshOpensea, getNetwork } = require('./utils.js')
+const { extractBiteId, refreshOpensea, getNetwork, getProvider } = require('./utils.js')
 const contracts = require('viper-contracts')
 
 const path = require('path')
@@ -16,7 +16,7 @@ const currentSpawns = []
 var os = require('os');
 
 var cores = os.cpus().length
-const maxSpawns = cores > 2 ? cores - 2 : 1
+const maxSpawns = 1//cores > 2 ? cores - 2 : 1
 console.log(`max spawns: ${maxSpawns}`)
 const v = new Viper()
 const GENERATE_GIFS = process.env.GENERATE_GIFS == "true" ? true : false
@@ -173,8 +173,20 @@ const generateGif = async function (tokenId, viperLength) {
       } else {
         contract = contracts.Viper
       }
-      // poke opensea
-      refreshOpensea(getNetwork(), contract.networks[getNetwork()].address, tokenId.toString())
+
+      // if token exists on chain, refresh it on opensea
+      const instantiaedContract = new ethers.Contract(
+        contract.networks[getNetwork()].address,
+        contract.abi,
+        getProvider()
+      )
+      try {
+        const owner = await instantiaedContract.ownerOf(tokenId.toString())
+        console.log({ owner })
+        refreshOpensea(getNetwork(), contract.networks[getNetwork()].address, tokenId.toString())
+      } catch (e) {
+        console.log('error from ownerOf, token does not exist on chain yet')
+      }
 
     } catch (e) {
       console.log({ e })
