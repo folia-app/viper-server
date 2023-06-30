@@ -16,6 +16,7 @@ function getNetworkId() {
   return networkID
 }
 
+
 function extractBiteId(tokenId) {
   tokenId = ethers.BigNumber.from(tokenId)
   // length is tokenId bit shifted right 169 bits
@@ -110,4 +111,4 @@ function boo(res, int) {
 
 
 // export extractBiteId
-module.exports = { extractBiteId, refreshOpensea, reverseLookup, getLength, getOwner, getOwnerOS, boo }
+module.exports = { extractBiteId, refreshOpensea, reverseLookup, getLength, getOwner, getOwnerOS, boo, getNetwork, getNetworkId, getProvider }

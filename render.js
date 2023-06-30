@@ -5,7 +5,8 @@ const client = require('https');
 const { Viper } = require('viper')
 const { createCanvas, loadImage } = require('canvas')
 const { spawn } = require('child_process');
-const { extractBiteId, refreshOpensea } = require('./utils.js')
+const { extractBiteId, refreshOpensea, getNetwork } = require('./utils.js')
+const contracts = require('viper-contracts')
 
 const path = require('path')
 const preloads = {}
@@ -41,7 +42,7 @@ const formatName = function (tokenId, length, preserve = true) {
   }
   const paddedTokenId = (bitten && !preserve ? "b" : "") + String(tokenId).padStart(4, '0')
   const paddedLength = String(length).padStart(3, '0')
-  return `${paddedTokenId}-${paddedLength}`
+  return `${paddedTokenId}/${paddedLength}`
 }
 for (let j = minLength; j <= maxLength; j++) {
   for (let i = 1; i <= preload; i++) {
@@ -58,24 +59,13 @@ const queueChecker = setInterval(() => {
     console.log('spawning')
     const next = queue.shift()
     console.log(`next: ${next}`, `There are ${currentSpawns.length} current spawns, and ${queue.length} in the queue. The max spawn is ${maxSpawns}`)
-    const [tokenId, viperLength] = next.split("-")
+    const [tokenId, viperLength] = next.split("/")
     generateGif(tokenId, viperLength)
   }
 }, 5000)
 
-var generatePlaceholderAndGif = async function (tokenId, viperLength) {
 
-  // check if gif is already generated
-  // if so, return gif
-  const filename = path.join(__dirname, `public/gifs/${formatName(tokenId, viperLength, false)}/complete.gif`)
-
-  try {
-    fs.accessSync(filename)
-    return filename
-  } catch (_) {
-    console.log(`no gif found at ${filename}`)
-  }
-
+var addToQueue = async function (tokenId, viperLength) {
   const queueIndex = queue.indexOf(formatName(tokenId, viperLength))
   const currentSpawnsIndex = currentSpawns.indexOf(formatName(tokenId, viperLength))
 
@@ -94,6 +84,24 @@ var generatePlaceholderAndGif = async function (tokenId, viperLength) {
   } else {
     console.log(`${formatName(tokenId, viperLength, false)} already in currentSpawns at position ${currentSpawnsIndex}`)
   }
+}
+
+var generatePlaceholderAndGif = async function (tokenId, viperLength) {
+
+  const dirPrefix = "public/" + (process.env.network == "homestead" ? "" : process.env.network + "-") + "gifs/"
+
+  // check if gif is already generated
+  // if so, return gif
+  const filename = path.join(__dirname, dirPrefix + `${formatName(tokenId, viperLength, false)}/complete.gif`)
+
+  try {
+    fs.accessSync(filename)
+    return filename
+  } catch (_) {
+    console.log(`no gif found at ${filename}`)
+  }
+
+  addToQueue(tokenId, viperLength)
 
   // check if placeholder img is already generated
   // if so, return placeholder img
@@ -111,7 +119,7 @@ var generatePlaceholderAndGif = async function (tokenId, viperLength) {
   return await generatePlaceholder(tokenId, viperLength)
 }
 
-var generateGif = async function (tokenId, viperLength) {
+const generateGif = async function (tokenId, viperLength) {
   // generate gif
   console.log(`generateGif ${formatName(tokenId, viperLength, false)}`)
   if (currentSpawns.length >= maxSpawns) {
@@ -120,10 +128,11 @@ var generateGif = async function (tokenId, viperLength) {
   }
 
   currentSpawns.push(`${formatName(tokenId, viperLength)}`)
+  const dirPrefix = "public/" + (process.env.network == "homestead" ? "" : process.env.network + "-") + "gifs/"
 
   // check if gif is already generated
   // if so, return gif
-  const filename = path.join(__dirname, `public/gifs/${formatName(tokenId, viperLength, false)}/complete.gif`)
+  const filename = path.join(__dirname, dirPrefix + `${formatName(tokenId, viperLength, false)}/complete.gif`)
   try {
     fs.accessSync(filename)
     console.log(`gif already exists at ${filename}, removing from currentSpans queue`)
@@ -133,8 +142,7 @@ var generateGif = async function (tokenId, viperLength) {
 
 
   const start = new Date().getTime();
-  console.log({ tokenId, viperLength })
-  const child = spawn(`./node_modules/viper/bin/viper-cli.js`, ['generate-gif', tokenId, viperLength])
+  const child = spawn(`./node_modules/viper/bin/viper-cli.js`, ['generate-gif', tokenId, viperLength, dirPrefix])
 
   child.stdout.on('data', data => {
     console.log(`stdout-${formatName(tokenId, viperLength, false)}:\n${data}`);
@@ -153,7 +161,7 @@ var generateGif = async function (tokenId, viperLength) {
 
     console.log(`child process exited with code ${code} while running on ${formatName(tokenId, viperLength, false)}`);
 
-    const filename = path.join(__dirname, `public/gifs/${formatName(tokenId, viperLength, false)}/complete.gif`)
+    const filename = path.join(__dirname, dirPrefix + `${formatName(tokenId, viperLength, false)}/complete.gif`)
     console.log(`checking if ${filename} exists`)
     try {
       fs.accessSync(filename)
@@ -161,6 +169,15 @@ var generateGif = async function (tokenId, viperLength) {
       totalTime += duration
       numberOfVipers++
       console.log(`gif completed at : ${filename} in a time of ${duration / 1000} s, average time: ${(totalTime / numberOfVipers) / 1000} s`)
+      let contract
+      if (formatName(tokenId, viperLength).indexOf("b") > -1) {
+        contract = contracts.BiteByViper
+      } else {
+        contract = contracts.Viper
+      }
+      // poke opensea
+      refreshOpensea(getNetwork(), contract.networks[getNetwork()].address, tokenId.toString())
+
     } catch (e) {
       console.log({ e })
       console.log(`exited without completing the gif, adding back to queue: ${formatName(tokenId, viperLength, false)}`)
@@ -230,6 +247,6 @@ var generatePlaceholder = async function (tokenId, viperLength) {
   })
 }
 
-module.exports = { generateGif, generatePlaceholder, generatePlaceholderAndGif }
+module.exports = { generateGif, generatePlaceholder, generatePlaceholderAndGif, addToQueue }
 
 

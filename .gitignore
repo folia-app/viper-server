@@ -9,6 +9,8 @@ json/
 yarn.lock
 
 public/gifs/
+public/*-gifs/
+public/gifs-*/
 public/old/
 public/old-2/
 
