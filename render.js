@@ -18,13 +18,11 @@ var os = require('os');
 var cores = os.cpus().length
 const maxSpawns = cores > 2 ? cores - 2 : 1
 console.log(`max spawns: ${maxSpawns}`)
-const v = new Viper({
-  setting: "server"
-})
+const v = new Viper()
 const GENERATE_GIFS = process.env.GENERATE_GIFS == "true" ? true : false
 const preload = GENERATE_GIFS ? v.allVipers.length : 0
 const minLength = 1
-const maxLength = 60
+const maxLength = getNetwork() == "homestead" ? 60 : 1
 
 let totalTime = 0
 let numberOfVipers = 0
