@@ -1,6 +1,6 @@
 const { ethers, utils } = require("ethers");
 const contracts = require('viper-contracts')
-const { extractBiteId, getNetwork, getProvider, refreshOpensea } = require('./utils.js')
+const { extractBiteId, getNetwork, getProvider } = require('./utils.js')
 const { addToQueue } = require('./render.js');
 
 if (contracts.Viper.networks[getNetwork()] == undefined) {
@@ -29,7 +29,6 @@ biteByViperContract.queryFilter(biteByViperContract.filters.Transfer(), 0)
       // var from = event.args[0]
       // var to = event.args[1].toString()
       var tokenId = ethers.BigNumber.from(event.args[2])
-      // refreshOpensea(getNetwork(), contracts.BiteByViper.networks[getNetwork()].address, tokenId.toString())
       if (process.env.GENERATE_GIFS == "true") {
         addToQueue(tokenId.toString(), 0)
       }

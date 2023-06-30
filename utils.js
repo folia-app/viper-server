@@ -52,11 +52,9 @@ var refreshOpensea = function (network, address, tokenID) {
         return response.json()
       })
       .then(data => {
-        console.log({ openseaSuccess: data, url })
         resolve({ status: 'success', data, url })
       })
       .catch(error => {
-        console.log({ opeseaError: error, url })
         resolve({ status: 'error', data: error, url })
       })
   })
@@ -134,8 +132,8 @@ const formatName = function (tokenId, length, preserve = true) {
   let originalTokenId, bitten = false
   if (String(tokenId).length > 4) {
     bitten = true;
-    if (tokenId.indexOf("b") > -1) {
-      tokenId = tokenId.replace("b", "")
+    if (String(tokenId).indexOf("b") > -1) {
+      tokenId = String(tokenId).replace("b", "")
     } else {
       ({ length, originalTokenId } = extractBiteId(tokenId))
       tokenId = preserve ? tokenId : originalTokenId
