@@ -50,9 +50,12 @@ router.get('/img/*', async function (req, res, next) {
   }
 
   if (parseInt(tokenId) <= 486) {
-    const { length } = await getLength(tokenId)
+    let { length } = await getLength(tokenId)
     if (length.lt(0)) {
       return boo(res, "Invalid tokenId")
+    } else {
+      // need to add 1 because they're 0 indexed
+      length = length.add(1)
     }
     viperLength = length.toNumber()
   }
