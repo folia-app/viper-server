@@ -35,13 +35,23 @@ function extractBiteId(tokenId) {
 }
 
 var refreshOpensea = function (network, address, tokenID) {
+  // https://testnets-api.opensea.io/api/v1/asset/<your_contract_address>/<token_id>/?force_update=true
   // https://testnets-api.opensea.io/v2/chain/sepolia/contract/0xc8a395e3b82e515f88e0ef548124c114f16ce9e3/nfts/1?limit=50
   const subdomain = network == 'homestead' ? 'api' : 'testnets-api'
   var url = `https://${subdomain}.opensea.io/api/v1/asset/${address}/${tokenID}/?force_update=true`
   fetch(url)
-    .then(response => response.json())
-    .then(data => console.log({ opensea: data }))
-    .catch(error => { console.log(error) })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('OS Network response was not ok, it was ' + response.status)
+      }
+      const contentType = response.headers.get('Content-Type')
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new TypeError('OS Response was not JSON')
+      }
+      return response.json()
+    })
+    .then(data => console.log({ openseaSuccess: data, url }))
+    .catch(error => { console.log({ opeseaError: error, url }) })
 }
 
 async function reverseLookup(address) {
