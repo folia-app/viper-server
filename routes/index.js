@@ -17,9 +17,8 @@ router.get('/v1/metadata/*', async function (req, res, next) {
 
   tokenId = ethers.BigNumber.from(tokenId)
   const isBitten = tokenId.gt(486)
-
+  console.log({ isBitten })
   let { owner, length } = await getLength(tokenId, isBitten)
-
   if (length.lt(0)) {
     return boo(res, "Invalid tokenId")
   } else {

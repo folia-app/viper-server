@@ -80,8 +80,10 @@ async function getLength(tokenId, isBitten) {
   )
   let owner
   try {
-    owner = await getOwnerOS(address, tokenId)
+    owner = await getOwner(address, tokenId)
+    // owner = await getOwnerOS(address, tokenId)
   } catch (e) {
+    console.log(`Error getting owner of ${tokenId} on ${address}`)
     return {
       owner: null,
       length: ethers.BigNumber.from(-1)
@@ -94,14 +96,14 @@ async function getLength(tokenId, isBitten) {
   }
 }
 
-async function getOwner(tokenId) {
+async function getOwner(address, tokenId) {
   const provider = getProvider()
-  const viperContract = new ethers.Contract(
-    contracts.Viper.networks[getNetworkId()].address,
+  const NFTContract = new ethers.Contract(
+    address,
     contracts.Viper.abi, provider
   )
 
-  const owner = await viperContract.ownerOf(tokenId)
+  const owner = await NFTContract.ownerOf(tokenId)
   return owner
 }
 
