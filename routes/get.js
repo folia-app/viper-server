@@ -1,7 +1,7 @@
 var express = require('express');
 const { ethers, utils } = require("ethers");
 const fs = require('fs');
-const { extractBiteId, getLength, boo } = require('../utils.js')
+const { extractBiteId, getLength, boo, getNetwork } = require('../utils.js')
 const { Viper } = require('viper')
 const stream = require('stream')
 const { Gone } = require('http-errors');
@@ -10,10 +10,25 @@ const path = require('path')
 
 var router = express.Router();
 
+// router.get('/iframe', async function (req, res, next) {
+//   const viperIndexPath = require.resolve('viper/dist/index.html');
+//   return returnFile(viperIndexPath, req, res, next)
+// })
+
+
 router.get('/iframe', async function (req, res, next) {
+  // const indexPath = path.join(__dirname, 'viper', 'dist', 'index.html');
   const viperIndexPath = require.resolve('viper/dist/index.html');
-  return returnFile(viperIndexPath, req, res, next)
-})
+  fs.readFile(viperIndexPath, 'utf8', (err, data) => {
+    if (err) {
+      return next(err);
+    }
+    if (getNetwork() !== "homestead") {
+      data = data.replace('const seed = null;', `const seed = '${getNetwork()}';`);
+    }
+    res.send(data);
+  });
+});
 
 router.get('/viper/*', async function (req, res, next) {
   const params = req.params[0].split("/")
