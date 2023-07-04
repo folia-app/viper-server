@@ -176,21 +176,25 @@ const generateGif = async function (tokenId, viperLength) {
     } else {
       contract = contracts.Viper
     }
-    const instantiaedContract = new ethers.Contract(
-      contract.networks[getNetwork()].address,
-      contract.abi,
-      getProvider()
-    )
-    let errorFrom = "ownerOf contract call"
     try {
-      const owner = await instantiaedContract.ownerOf(tokenId.toString())
-      errorFrom = "opensea api call"
-      console.log({ owner })
-      refreshOpensea(getNetwork(), contract.networks[getNetwork()].address, tokenId.toString()).then((response) => {
-        console.log(`refresh metadata for ${tokenId} on opensea resulted in ${response.status}`)
-      })
+      const instantiaedContract = new ethers.Contract(
+        contract.networks[getNetwork()].address,
+        contract.abi,
+        getProvider()
+      )
+      let errorFrom = "ownerOf contract call"
+      try {
+        const owner = await instantiaedContract.ownerOf(tokenId.toString())
+        errorFrom = "opensea api call"
+        console.log({ owner })
+        refreshOpensea(getNetwork(), contract.networks[getNetwork()].address, tokenId.toString()).then((response) => {
+          console.log(`refresh metadata for ${tokenId} on opensea resulted in ${response.status}`)
+        })
+      } catch (e) {
+        console.log(`refresh metadata error from ${errorFrom}`)
+      }
     } catch (e) {
-      console.log(`refresh metadata error from ${errorFrom}`)
+      console.log(`failed to refresh metadata on opensea`, { e })
     }
 
     console.log('done trying to optimize gif, OK to remove from queue whether optimization worked or not')
