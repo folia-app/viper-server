@@ -80,26 +80,29 @@ router.get('/refresh-os/*', async function (req, res, next) {
 router.get('/img/*', async function (req, res, next) {
 
   const params = req.params[0].split("/")
-  console.log({ params })
   var tokenId = params[0]
   var viperLength = parseInt(params[1], 10)
 
   if (!tokenId || parseInt(tokenId) <= 0) {
     return boo(res, "Invalid tokenId")
   }
-
-  if (parseInt(tokenId) <= 486) {
-    let { length } = await getLength(tokenId)
-    if (length.lt(0)) {
-      return boo(res, "Invalid tokenId")
-    } else {
-      // need to add 1 because they're 0 indexed
-      length = length.add(1)
+  try {
+    if (parseInt(tokenId) <= 486) {
+      let { length } = await getLength(tokenId)
+      if (length.lt(0)) {
+        return boo(res, "Invalid tokenId")
+      } else {
+        // need to add 1 because they're 0 indexed
+        length = length.add(1)
+      }
+      viperLength = length.toNumber()
     }
-    viperLength = length.toNumber()
-  }
-  if (!viperLength || !Number.isInteger(viperLength)) {
-    viperLength = 1
+    if (!viperLength || !Number.isInteger(viperLength)) {
+      viperLength = 1
+    }
+  } catch (err) {
+    console.log({ err })
+    return boo(res, "Invalid tokenId")
   }
 
   try {
