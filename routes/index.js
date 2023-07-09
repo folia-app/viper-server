@@ -3,9 +3,9 @@ var router = express.Router();
 const fs = require('fs');
 const { ethers } = require("ethers");
 const path = require('path')
-const { getLength, boo, extractBiteId, formatName, getNetwork } = require('../utils.js')
+const { getLength, boo, extractBiteId, formatName, getNetwork, reverseLookup } = require('../utils.js')
 
-// const { Viper } = require('viper-contracts')
+const { Viper } = require('viper')
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -17,7 +17,7 @@ router.get('/v1/metadata/*', async function (req, res, next) {
 
   tokenId = ethers.BigNumber.from(tokenId)
   const isBitten = tokenId.gt(486)
-  console.log({ isBitten })
+
   let { owner, length } = await getLength(tokenId, isBitten)
   if (length.lt(0)) {
     return boo(res, "Invalid tokenId")
@@ -38,19 +38,32 @@ router.get('/v1/metadata/*', async function (req, res, next) {
     image = image + `?c=${fs.statSync(imagePath).mtimeMs}`
   }
 
+  const v = new Viper({
+    seed: getNetwork() == "homestead" ? null : getNetwork(),
+    tokenId: tokenId.toString(),
+    length: length.toNumber(),
+  })
+
   var animation_url = `${baseURL}/get/iframe#${tokenId}-${length.toString()}`
-  const external_url = baseURL // TODO: fix this
+  const external_url = `https://viper.folia.app` // TODO: change this when we know URL scheme in app
 
-  const name = isBitten ? "Viper Bite by Viper #" + extractBiteId(tokenId).originalTokenId : "Viper #" + tokenId
+  const viperName = isBitten ? v.allVipers.filter(v => v.tokenId == extractBiteId(tokenId).originalTokenId)[0].name : v.me.name
 
+  const name = isBitten ? "Bite by Viper " + viperName : viperName
+  let senderAddress
+  if (isBitten) {
+    senderAddress = extractBiteId(tokenId).senderAddress
+    const ensName = await reverseLookup(senderAddress)
+    if (ensName) {
+      senderAddress = ensName
+    }
+  }
   let description
   if (isBitten) {
-    description = `Bite by Viper is the result of an act of aggression. You've been poisoned and there is no cure. To find out more go to ${external_url}.`
+    description = `You've been bitten by ${viperName} and there is no cure. Blame ${senderAddress}. \n\nTo find out more go to ${external_url}.`
   } else {
-    description = `Viper is.... ~ presented by [Folia](https://folia.app)`
+    description = `Viper ${viperName} has bitten ${length - 1} ${length - 1 == 1 ? "time" : "times"}. \n\nTo find out more go to https://viper.folia.app.`
   }
-
-  //TODO: add viper attributes
 
   // the sauce
   const metadata = {
@@ -76,19 +89,20 @@ router.get('/v1/metadata/*', async function (req, res, next) {
 
     // opensea
     attributes: [
-      {
-        trait_type: 'length',
-        value: length.toNumber()
-      },
-      // {
-      //   trait_type: 'mouth',
-      //   value: mouths[mouth]
-      // }
+      { trait_type: 'Length', value: length.toNumber() },
+      { trait_type: 'Head', value: v.headBase()[v.me.head % v.headBase().length] },
+      { trait_type: 'Style', value: v.styles()[v.me.style] },
+      { trait_type: 'Pattern', value: v.patterns()[v.me.pattern] },
+      { trait_type: "Mood", value: v.mood()[v.me.head % 13] },
+
     ],
     // rarebits
     properties: [
-      { key: 'length', value: length.toNumber(), type: 'number' },
-      // { key: 'mouth', value: mouths[mouth], type: 'string' }
+      { key: 'Length', value: length.toNumber(), type: 'number' },
+      { key: 'Head', value: v.headBase()[v.me.head % v.headBase().length], type: 'string' },
+      { key: 'Style', value: v.styles()[v.me.style], type: 'string' },
+      { key: 'Pattern', value: v.patterns()[v.me.pattern], type: 'string' },
+      { key: "Mood", value: v.mood()[v.me.head % 13], type: 'string' },
     ],
     // optimized for folia site
     // animation_url_optim: animation_url,
@@ -109,13 +123,6 @@ router.get('/v1/metadata/*', async function (req, res, next) {
 
 
   res.json(metadata);
-
-  // // const data = fs.readFileSync(filename)
-  // res.writeHead(200, {
-  //   'Content-Type': 'application/json',
-  // })
-  // return res.end(metadata);
-
 })
 
 router.get('/all/', async function (req, res, next) {

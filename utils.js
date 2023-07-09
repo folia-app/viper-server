@@ -1,6 +1,6 @@
 const { ethers } = require("ethers");
 const contracts = require('viper-contracts')
-const axios = require('axios');
+
 
 
 function getNetwork() {
@@ -15,6 +15,7 @@ function getNetworkId() {
   const networkID = networks[getNetwork()]
   return networkID
 }
+
 
 
 function extractBiteId(tokenId) {
@@ -117,7 +118,9 @@ async function getOwnerOS(nftContractAddress, tokenId) {
   const prefix = getNetwork() == 'homestead' ? '' : 'testnets-'
   // https://testnets-api.opensea.io/v2/chain/sepolia/contract/0xc8a395e3b82e515f88e0ef548124c114f16ce9e3/nfts/1?limit=50
   const target = `https://${prefix}api.opensea.io/v2/chain/${getNetwork()}/contract/${nftContractAddress}/nfts/${tokenId.toString()}?limit=1`
-  const response = await axios.get(target);
+
+  const request = await fetch(target)
+  const response = await request.json()
   const nft = response.data.nft
   const owners = nft.owners
   return owners[0].address
