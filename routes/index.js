@@ -52,7 +52,7 @@ router.get('/v1/metadata/*', async function (req, res, next) {
   const name = isBitten ? "Bite by Viper " + viperName : viperName
   let senderAddress
   if (isBitten) {
-    senderAddress = extractBiteId(tokenId).senderAddress
+    senderAddress = extractBiteId(tokenId).senderAddress.toHexString()
     const ensName = await reverseLookup(senderAddress)
     if (ensName) {
       senderAddress = ensName
