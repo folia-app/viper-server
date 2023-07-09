@@ -60,7 +60,7 @@ router.get('/v1/metadata/*', async function (req, res, next) {
   }
   let description
   if (isBitten) {
-    description = `You've been bitten by ${viperName} and there is no cure. Blame ${senderAddress}. \n\nTo find out more go to ${external_url}.`
+    description = `You've been bitten by ${viperName} and there is no cure. Blame https://${getNetwork() == "homestead" ? "" : getNetwork() + "."}etherscan.io/address/${senderAddress}. \n\nTo find out more go to ${external_url}.`
   } else {
     description = `Viper ${viperName} has bitten ${length - 1} ${length - 1 == 1 ? "time" : "times"}. \n\nTo find out more go to https://viper.folia.app.`
   }
