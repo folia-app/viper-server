@@ -15,7 +15,12 @@ router.get('/', function (req, res, next) {
 router.get('/v1/metadata/*', async function (req, res, next) {
   let tokenId = req.params[0]
 
-  tokenId = ethers.BigNumber.from(tokenId)
+  // check if tokenId would be accepted by BigNumber as a number
+  try {
+    tokenId = ethers.BigNumber.from(tokenId)
+  } catch (e) {
+    return boo(res, "Invalid tokenId")
+  }
   const isBitten = tokenId.gt(486)
 
   let { owner, length } = await getLength(tokenId, isBitten)
@@ -65,6 +70,8 @@ router.get('/v1/metadata/*', async function (req, res, next) {
     description = `Viper ${viperName} has bitten ${length - 1} ${length - 1 == 1 ? "time" : "times"}. \n\nTo find out more go to https://viper.folia.app.`
   }
 
+  console.log(v.me)
+  console.log(v.styles())
   // the sauce
   const metadata = {
     // both opensea and rarebits
@@ -119,32 +126,29 @@ router.get('/v1/metadata/*', async function (req, res, next) {
     // sha hashes for posterity (annoying for works with many files... IPFS is source file...)
     // sha256: work.sha256 || {}
   }
-
-
-
   res.json(metadata);
 })
 
-router.get('/all/', async function (req, res, next) {
-  // count how many gifs exist in the public/gifs folder
-  const directoryPath = path.join(__dirname, '../public/gifs');
-  const files = fs.readdirSync(directoryPath).filter(name => name.indexOf("-") === 4)//.map(name => name.split("-")[0]);
-  const groups = []
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i]
-    const tokenId = parseInt(file.split("-")[0])
-    const index = tokenId - 1
-    if (!groups[index]) {
-      groups[index] = []
-    }
-    groups[index].push(file)
-  }
-  console.log({ groups })
+// router.get('/all/', async function (req, res, next) {
+//   // count how many gifs exist in the public/gifs folder
+//   const directoryPath = path.join(__dirname, '../public/gifs');
+//   const files = fs.readdirSync(directoryPath).filter(name => name.indexOf("-") === 4)//.map(name => name.split("-")[0]);
+//   const groups = []
+//   for (let i = 0; i < files.length; i++) {
+//     const file = files[i]
+//     const tokenId = parseInt(file.split("-")[0])
+//     const index = tokenId - 1
+//     if (!groups[index]) {
+//       groups[index] = []
+//     }
+//     groups[index].push(file)
+//   }
+//   console.log({ groups })
 
-  // use the template inside viers/all.jade
-  res.render('all', { files: groups });
+//   // use the template inside viers/all.jade
+//   res.render('all', { files: groups });
 
-})
+// })
 
 
 module.exports = router;

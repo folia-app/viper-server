@@ -1,11 +1,11 @@
 var express = require('express');
-const { ethers, utils } = require("ethers");
+// const { ethers, utils } = require("ethers");
 const fs = require('fs');
-const { extractBiteId, getLength, boo, getNetwork, refreshOpensea } = require('../utils.js')
-const { Viper } = require('viper')
-const stream = require('stream')
-const { Gone } = require('http-errors');
-const { generateGif, generatePlaceholder, generatePlaceholderAndGif, addToQueue } = require('../render.js');
+const { getLength, boo, getNetwork, refreshOpensea } = require('../utils.js')
+// const { Viper } = require('viper')
+// const stream = require('stream')
+// const { Gone } = require('http-errors');
+const { generatePlaceholderAndGif, addToQueue } = require('../render.js');
 const path = require('path')
 const contracts = require('viper-contracts')
 
@@ -17,10 +17,12 @@ var router = express.Router();
 // })
 const placeHolderFilename = path.join(__dirname, `public/viper-loading-loop.gif`)
 
-
 router.get('/iframe', async function (req, res, next) {
+  // detect if there is a ? in the url. If so, replace the pattern parameter
+  const showPattern = req.url.indexOf("?") > -1
   // const indexPath = path.join(__dirname, 'viper', 'dist', 'index.html');
-  const viperIndexPath = require.resolve('viper/dist/index.html');
+  const viperIndexPath = require.resolve('viper/dist/index.html')
+  // return returnFile(viperIndexPath, req, res, next)
   fs.readFile(viperIndexPath, 'utf8', (err, data) => {
     if (err) {
       return next(err);
@@ -28,13 +30,15 @@ router.get('/iframe', async function (req, res, next) {
     if (getNetwork() !== "homestead") {
       data = data.replace('const seed = null;', `const seed = '${getNetwork()}';`);
     }
+    if (showPattern) {
+      data = data.replace('showPattern = false', 'showPattern = true')
+    }
     res.send(data);
   });
 });
 
 
 router.get('/refresh-os/*', async function (req, res, next) {
-
   const params = req.params[0].split("/")
   var tokenId = params[0]
   var viperLength = parseInt(params[1], 10)
@@ -80,18 +84,15 @@ router.get('/refresh-os/*', async function (req, res, next) {
       // return res.status(200).send(data)
     } else {
       return boo(res, response.data + " (" + response.url + ")")
-      // return boo(res, data)
     }
   } else {
     addToQueue(tokenId, viperLength)
     return boo(res, "not done generating image")
   }
-  // return res.status(400).send(err)
 })
 
 
 router.get('/img/*', async function (req, res, next) {
-
   const params = req.params[0].split("/")
   var tokenId = params[0]
   var viperLength = parseInt(params[1], 10)
@@ -147,63 +148,5 @@ function returnFile(filename, req, res, next) {
     }
   })
 }
-
-
-
-// /* GET users listing. */
-// router.get('/*', async function (req, res, next) {
-//   const params = req.params[0].split("/")
-//   var contractAddress, originalTokenId, prefix, suffix
-//   if (params[0] == 'original') {
-//     contractAddress = params[1]
-//     originalTokenId = params[2]
-//     prefix = 'raw'
-//     suffix = ''
-//   } else {
-//     contractAddress = params[0]
-//     originalTokenId = params[1]
-//     prefix = 'output'
-//     suffix = '.png'
-//   }
-
-//   console.log({ contractAddress, originalTokenId })
-
-//   var tokenId = utils.solidityKeccak256(["address", "uint256"], [contractAddress, originalTokenId])
-
-//   console.log(`get:\n`,
-//     { contractAddress },
-//     { originalTokenId },
-//     { tokenId })
-
-//   const filename = `${prefix}/${contractAddress.toString().toLowerCase()}-${originalTokenId.toString().toLowerCase()}-${tokenId.toString().toLowerCase()}${suffix}`
-
-//   try {
-//     fs.accessSync(filename)
-//   } catch (_) {
-//     console.log(`didn't have the file ${filename}`)
-//     try {
-//       await go(contractAddress, originalTokenId, tokenId, networkID)
-//     } catch (err) {
-//       if (err.message == 'no such token') {
-//         return res.status(404).send(err.message)
-//       }
-//       console.log({ err })
-//       return boo(res, "404")
-//     }
-//   }
-
-//   try {
-//     fs.accessSync(filename)
-//   } catch (_) {
-//     console.log(`still didn't have the file ${filename}`)
-//     boo(res, 6)
-//   }
-
-//   const data = fs.readFileSync(filename)
-//   res.writeHead(200, {
-//     'Content-Type': 'image/png',
-//   })
-//   return res.end(data);
-// });
 
 module.exports = router;
