@@ -69,9 +69,6 @@ router.get('/v1/metadata/*', async function (req, res, next) {
   } else {
     description = `Viper ${viperName} has bitten ${length - 1} ${length - 1 == 1 ? "time" : "times"}. \n\nTo find out more go to https://viper.folia.app.`
   }
-
-  console.log(v.me)
-  console.log(v.styles())
   // the sauce
   const metadata = {
     // both opensea and rarebits
