@@ -14,14 +14,13 @@ router.get('/', function (req, res, next) {
 
 router.get('/v1/metadata/*', async function (req, res, next) {
   let tokenId = req.params[0]
-
+  const isBitten = tokenId.length > 4
   // check if tokenId would be accepted by BigNumber as a number
   try {
     tokenId = ethers.BigNumber.from(tokenId)
   } catch (e) {
     return boo(res, "Invalid tokenId")
   }
-  const isBitten = tokenId.gt(486)
 
   let { owner, length } = await getLength(tokenId, isBitten)
   if (length.lt(0)) {
