@@ -4,7 +4,7 @@
   "env": {
     "PORT": 3001,
     "network": "homestead",
-    "baseURL": "https://viper-mainnet.netlify.app/api",
+    "baseURL": "https://viper.folia.app/api",
     "NODE_ENV": "production",
     "GENERATE_GIFS": true,
     "SERVERS": 1
