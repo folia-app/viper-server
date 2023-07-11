@@ -69,6 +69,8 @@ router.get('/v1/metadata/*', async function (req, res, next) {
   } else {
     description = `Viper ${viperName} has bitten ${length - 1} ${length - 1 == 1 ? "time" : "times"}. \n\nTo find out more go to https://viper.folia.app.`
   }
+
+  const style = v.me.head > 25 ? 'Big Head' : v.styles()[v.me.style]
   // the sauce
   const metadata = {
     // both opensea and rarebits
@@ -95,7 +97,7 @@ router.get('/v1/metadata/*', async function (req, res, next) {
     attributes: [
       { trait_type: 'Length', value: length.toNumber() },
       { trait_type: 'Head', value: v.headBase()[v.me.head % v.headBase().length] },
-      { trait_type: 'Style', value: v.styles()[v.me.style] },
+      { trait_type: 'Style', value: style },
       { trait_type: 'Pattern', value: v.patterns()[v.me.pattern] },
       { trait_type: "Mood", value: v.mood()[v.me.head % 13] },
 
@@ -104,7 +106,7 @@ router.get('/v1/metadata/*', async function (req, res, next) {
     properties: [
       { key: 'Length', value: length.toNumber(), type: 'number' },
       { key: 'Head', value: v.headBase()[v.me.head % v.headBase().length], type: 'string' },
-      { key: 'Style', value: v.styles()[v.me.style], type: 'string' },
+      { key: 'Style', value: style, type: 'string' },
       { key: 'Pattern', value: v.patterns()[v.me.pattern], type: 'string' },
       { key: "Mood", value: v.mood()[v.me.head % 13], type: 'string' },
     ],
