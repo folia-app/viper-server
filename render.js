@@ -185,14 +185,13 @@ const generateGif = async function (tokenId, viperLength) {
       )
       let errorFrom = "ownerOf contract call"
       try {
-        const owner = await instantiaedContract.ownerOf(tokenId.toString())
+        // const owner = await instantiaedContract.ownerOf(tokenId.toString())
         errorFrom = "opensea api call"
-        console.log({ owner })
         refreshOpensea(getNetwork(), contract.networks[getNetwork()].address, tokenId.toString()).then((response) => {
           console.log(`refresh metadata for ${tokenId} on opensea resulted in ${response.status}`)
         })
       } catch (e) {
-        console.log(`refresh metadata error from ${errorFrom}`)
+        console.log(`refresh metadata error from ${errorFrom}`, { e })
       }
     } catch (e) {
       console.log(`failed to refresh metadata on opensea`, { e })
