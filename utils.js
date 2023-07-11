@@ -88,7 +88,7 @@ function getProvider() {
   );
   return provider
 }
-async function getLength(tokenId, isBitten) {
+async function getLength(tokenId, isBitten, returnOwner = false) {
 
   // make sure tokenId is a BigNumber
   tokenId = tokenId.toString()
@@ -101,14 +101,16 @@ async function getLength(tokenId, isBitten) {
     address, abi, provider
   )
   let owner
-  try {
-    owner = await getOwner(address, tokenId)
-    // owner = await getOwnerOS(address, tokenId)
-  } catch (e) {
-    console.log(`Error getting owner of ${tokenId} on ${address}`)
-    return {
-      owner: null,
-      length: ethers.BigNumber.from(-1)
+  if (returnOwner) {
+    try {
+      owner = await getOwner(address, tokenId)
+      // owner = await getOwnerOS(address, tokenId)
+    } catch (e) {
+      console.log(`Error getting owner of ${tokenId} on ${address}`, { e })
+      return {
+        owner: null,
+        length: ethers.BigNumber.from(-1)
+      }
     }
   }
   let length
@@ -124,24 +126,34 @@ async function getLength(tokenId, isBitten) {
 }
 
 async function getOwner(address, tokenId) {
+  let owner
+  try {
+    owner = await getOwnerOS(address, tokenId)
+    return owner
+  } catch (e) {
+    console.log(`error trying to get owner from OS, going to try getting from infura`, { e })
+  }
   const provider = getProvider()
   const NFTContract = new ethers.Contract(
     address,
     contracts.Viper.abi, provider
   )
 
-  const owner = await NFTContract.ownerOf(tokenId)
+  owner = await NFTContract.ownerOf(tokenId)
   return owner
 }
 
 async function getOwnerOS(nftContractAddress, tokenId) {
   const prefix = getNetwork() == 'homestead' ? '' : 'testnets-'
   // https://testnets-api.opensea.io/v2/chain/sepolia/contract/0xc8a395e3b82e515f88e0ef548124c114f16ce9e3/nfts/1?limit=50
-  const target = `https://${prefix}api.opensea.io/v2/chain/${getNetwork()}/contract/${nftContractAddress}/nfts/${tokenId.toString()}?limit=1`
-
-  const request = await fetch(target)
+  const target = `https://${prefix}api.opensea.io/v2/chain/${getNetwork() == "homestead" ? "ethereum" : getNetwork()}/contract/${nftContractAddress}/nfts/${tokenId.toString()}?limit=1`
+  const options = {
+    method: 'GET',
+    headers: { accept: 'application/json', 'X-API-KEY': process.env.opensea_api }
+  };
+  const request = await fetch(target, options)
   const response = await request.json()
-  const nft = response.data.nft
+  const nft = response.nft
   const owners = nft.owners
   return owners[0].address
 }

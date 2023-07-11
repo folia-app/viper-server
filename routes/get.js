@@ -1,7 +1,7 @@
 var express = require('express');
 // const { ethers, utils } = require("ethers");
 const fs = require('fs');
-const { getLength, boo, getNetwork, refreshOpensea } = require('../utils.js')
+const { getLength, boo, getNetwork, refreshOpensea, extractBiteId } = require('../utils.js')
 // const { Viper } = require('viper')
 // const stream = require('stream')
 // const { Gone } = require('http-errors');
@@ -95,6 +95,16 @@ router.get('/refresh-os/*', async function (req, res, next) {
 router.get('/img/*', async function (req, res, next) {
   const params = req.params[0].split("/")
   var tokenId = params[0]
+  if (tokenId.length > 3 || parseInt(tokenId) > 486) {
+    try {
+      const { originalTokenId } = extractBiteId(tokenId)
+      if (originalTokenId.lt(1) || originalTokenId.gt(486)) {
+        return boo(res, "Invalid tokenId")
+      }
+    } catch (err) {
+      return boo(res, "Invalid tokenId")
+    }
+  }
   var viperLength = parseInt(params[1], 10)
 
   if (!tokenId || parseInt(tokenId) <= 0) {

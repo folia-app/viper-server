@@ -3,6 +3,8 @@ const contracts = require('viper-contracts')
 const { extractBiteId, getNetwork, getProvider } = require('./utils.js')
 const { addToQueue } = require('./render.js');
 console.log('network:', getNetwork())
+
+if (process.env.LISTEN == "false") return
 if (contracts.Viper.networks[getNetwork()] == undefined) {
   console.error(`no viper contract on network ${getNetwork()}`)
   return

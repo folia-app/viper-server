@@ -123,15 +123,12 @@ const pokeOS = async (tokenId, viperLength) => {
       contract.abi,
       getProvider()
     )
-    let errorFrom = "ownerOf contract call"
     try {
-      await instantiaedContract.ownerOf(tokenId.toString())
-      errorFrom = "opensea api call"
       refreshOpensea(getNetwork(), address, tokenId.toString()).then((response) => {
         console.log(`refresh metadata for ${tokenId} on opensea resulted in ${response.status}`, { response })
       })
     } catch (e) {
-      console.log(`refresh metadata error from ${errorFrom}`, { e })
+      console.log(`refresh metadata error from opensea api call`, { e })
     }
   } catch (e) {
     console.log(`failed to refresh metadata on opensea`, { e })

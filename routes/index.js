@@ -22,7 +22,8 @@ router.get('/v1/metadata/*', async function (req, res, next) {
     return boo(res, "Invalid tokenId")
   }
 
-  let { owner, length } = await getLength(tokenId, isBitten)
+  const returnOwner = true
+  let { owner, length } = await getLength(tokenId, isBitten, returnOwner)
   if (length.lt(0)) {
     return boo(res, "Invalid tokenId")
   } else {
@@ -49,7 +50,7 @@ router.get('/v1/metadata/*', async function (req, res, next) {
   })
 
   var animation_url = `${baseURL}/get/iframe#${tokenId}-${length.toString()}` // TODO: change this when we know URL scheme in app
-  const external_url = 'https://viper.folia.app' + isBitten ? "" : `/tokens/${tokenId}`
+  const external_url = 'https://viper.folia.app' + (isBitten ? "" : `/tokens/${tokenId}`)
 
   const viperName = isBitten ? v.allVipers.filter(v => v.tokenId == extractBiteId(tokenId).originalTokenId)[0].name : v.me.name
 
