@@ -23,7 +23,7 @@ const v = new Viper()
 const GENERATE_GIFS = process.env.GENERATE_GIFS == "true" ? true : false
 const preload = GENERATE_GIFS ? v.allVipers.length : 0
 const minLength = 1
-const maxLength = getNetwork() == "homestead" ? 85 : 1
+const maxLength = getNetwork() == "homestead" ? 1 : 1
 
 let totalTime = 0
 let numberOfVipers = 0
