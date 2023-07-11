@@ -104,7 +104,9 @@ var generatePlaceholderAndGif = async function (tokenId, viperLength) {
 }
 
 const pokeOS = async (tokenId, viperLength) => {
-  tokenId = parseInt(tokenId)
+  if (tokenId.length < 5) {
+    tokenId = parseInt(tokenId)
+  }
   viperLength = parseInt(viperLength)
   // if token exists on chain, refresh it on opensea
   let contract
