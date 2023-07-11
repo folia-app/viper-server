@@ -4,7 +4,7 @@
   "env": {
     "PORT": 3000,
     "network": "sepolia",
-    "baseURL": "http://64.226.122.159:3000",
+    "baseURL": "https://viper-sepolia.netlify.app/api",
     "NODE_ENV": "development",
     "GENERATE_GIFS": false,
     "SERVERS": 2
