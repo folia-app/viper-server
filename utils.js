@@ -89,6 +89,10 @@ function getProvider() {
   return provider
 }
 async function getLength(tokenId, isBitten) {
+
+  // make sure tokenId is a BigNumber
+  tokenId = tokenId.toString()
+
   const provider = getProvider()
 
   const address = isBitten ? contracts.BiteByViper.networks[getNetworkId()].address : contracts.Viper.networks[getNetworkId()].address
@@ -108,7 +112,7 @@ async function getLength(tokenId, isBitten) {
     }
   }
   let length
-  if (tokenId !== '486' && !tokenId.eq(486)) {
+  if (tokenId !== '486') {
     length = isBitten ? ethers.BigNumber.from(0) : (await contract.lengths(tokenId))
   } else {
     length = ethers.BigNumber.from(0)
