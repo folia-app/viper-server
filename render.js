@@ -103,6 +103,39 @@ var generatePlaceholderAndGif = async function (tokenId, viperLength) {
   return await generatePlaceholder(tokenId, viperLength)
 }
 
+const pokeOS = async (tokenId, viperLength) => {
+  tokenId = parseInt(tokenId)
+  viperLength = parseInt(viperLength)
+  // if token exists on chain, refresh it on opensea
+  let contract
+  const nameCheck = formatName(tokenId, viperLength, false)
+  if (nameCheck.indexOf("b") > -1) {
+    contract = contracts.BiteByViper
+  } else {
+    contract = contracts.Viper
+  }
+  try {
+    const address = contract.networks[getNetwork()].address
+    const instantiaedContract = new ethers.Contract(
+      address,
+      contract.abi,
+      getProvider()
+    )
+    let errorFrom = "ownerOf contract call"
+    try {
+      await instantiaedContract.ownerOf(tokenId.toString())
+      errorFrom = "opensea api call"
+      refreshOpensea(getNetwork(), address, tokenId.toString()).then((response) => {
+        console.log(`refresh metadata for ${tokenId} on opensea resulted in ${response.status}`, { response })
+      })
+    } catch (e) {
+      console.log(`refresh metadata error from ${errorFrom}`, { e })
+    }
+  } catch (e) {
+    console.log(`failed to refresh metadata on opensea`, { e })
+  }
+}
+
 const generateGif = async function (tokenId, viperLength) {
   // generate gif
   console.log(`generateGif ${formatName(tokenId, viperLength, false)}`)
@@ -121,6 +154,8 @@ const generateGif = async function (tokenId, viperLength) {
     fs.accessSync(filename)
     console.log(`gif already exists at ${filename}, removing from currentSpans queue`)
     currentSpawns.splice(currentSpawns.indexOf(`${formatName(tokenId, viperLength, false)}`), 1)
+    pokeOS(tokenId, viperLength)
+
     return
   } catch (_) { }
 
@@ -169,35 +204,7 @@ const generateGif = async function (tokenId, viperLength) {
     } catch (e) {
       console.log(`failed to optimize gif, exited with error:`, { e })
     }
-
-    // if token exists on chain, refresh it on opensea
-    let contract
-    const nameCheck = formatName(tokenId, viperLength, false)
-    if (nameCheck.indexOf("b") > -1) {
-      contract = contracts.BiteByViper
-    } else {
-      contract = contracts.Viper
-    }
-    try {
-      const address = contract.networks[getNetwork()].address
-      const instantiaedContract = new ethers.Contract(
-        address,
-        contract.abi,
-        getProvider()
-      )
-      let errorFrom = "ownerOf contract call"
-      try {
-        await instantiaedContract.ownerOf(tokenId.toString())
-        errorFrom = "opensea api call"
-        refreshOpensea(getNetwork(), address, tokenId.toString()).then((response) => {
-          console.log(`refresh metadata for ${tokenId} on opensea resulted in ${response.status}`, { response })
-        })
-      } catch (e) {
-        console.log(`refresh metadata error from ${errorFrom}`, { e })
-      }
-    } catch (e) {
-      console.log(`failed to refresh metadata on opensea`, { e })
-    }
+    pokeOS(tokenId, viperLength)
 
     console.log('done trying to optimize gif, OK to remove from queue whether optimization worked or not')
     currentSpawns.splice(currentSpawns.indexOf(`${formatName(tokenId, viperLength)}`), 1)
