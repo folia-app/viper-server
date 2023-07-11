@@ -172,23 +172,25 @@ const generateGif = async function (tokenId, viperLength) {
 
     // if token exists on chain, refresh it on opensea
     let contract
-    if (formatName(tokenId, viperLength).indexOf("b") > -1) {
+    const nameCheck = formatName(tokenId, viperLength, false)
+    if (nameCheck.indexOf("b") > -1) {
       contract = contracts.BiteByViper
     } else {
       contract = contracts.Viper
     }
     try {
+      const address = contract.networks[getNetwork()].address
       const instantiaedContract = new ethers.Contract(
-        contract.networks[getNetwork()].address,
+        address,
         contract.abi,
         getProvider()
       )
       let errorFrom = "ownerOf contract call"
       try {
-        // const owner = await instantiaedContract.ownerOf(tokenId.toString())
+        await instantiaedContract.ownerOf(tokenId.toString())
         errorFrom = "opensea api call"
-        refreshOpensea(getNetwork(), contract.networks[getNetwork()].address, tokenId.toString()).then((response) => {
-          console.log(`refresh metadata for ${tokenId} on opensea resulted in ${response.status}`)
+        refreshOpensea(getNetwork(), address, tokenId.toString()).then((response) => {
+          console.log(`refresh metadata for ${tokenId} on opensea resulted in ${response.status}`, { response })
         })
       } catch (e) {
         console.log(`refresh metadata error from ${errorFrom}`, { e })

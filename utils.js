@@ -55,7 +55,7 @@ var refreshOpensea = function (network, address, tokenID) {
       // fetch(url)
       .then(response => {
         if (!response.ok) {
-          throw new Error('OS Network response was not ok, it was ' + response.status)
+          throw new Error('OS Network response was not ok, it was ' + response.status + ' with url ' + url)
         }
         const contentType = response.headers.get('Content-Type')
         if (!contentType || !contentType.includes('application/json')) {

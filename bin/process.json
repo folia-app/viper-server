@@ -6,7 +6,7 @@
     "network": "homestead",
     "baseURL": "https://viper-mainnet.netlify.app/api",
     "NODE_ENV": "production",
-    "GENERATE_GIFS": false,
+    "GENERATE_GIFS": true,
     "SERVERS": 2
   },
   "script": "bin/www"
