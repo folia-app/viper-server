@@ -6,7 +6,8 @@
     "network": "sepolia",
     "baseURL": "http://64.226.122.159:3000",
     "NODE_ENV": "development",
-    "GENERATE_GIFS": false
+    "GENERATE_GIFS": false,
+    "SERVERS": 2
   },
   "script": "bin/www",
   "ignore_watch": [

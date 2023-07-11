@@ -6,7 +6,8 @@
     "network": "homestead",
     "baseURL": "https://26b89c14e1ea-1937955182257100860.ngrok-free.app",
     "NODE_ENV": "production",
-    "GENERATE_GIFS": true
+    "GENERATE_GIFS": true,
+    "SERVERS": 2
   },
   "script": "bin/www"
 }
