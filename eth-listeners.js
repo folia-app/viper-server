@@ -2,7 +2,7 @@ const { ethers, utils } = require("ethers");
 const contracts = require('viper-contracts')
 const { extractBiteId, getNetwork, getProvider } = require('./utils.js')
 const { addToQueue } = require('./render.js');
-
+console.log('network:', getNetwork())
 if (contracts.Viper.networks[getNetwork()] == undefined) {
   console.error(`no viper contract on network ${getNetwork()}`)
   return

@@ -1,0 +1,20 @@
+{
+  "name": "viper-server-sepolia",
+  "watch": true,
+  "env": {
+    "PORT": 3000,
+    "network": "sepolia",
+    "baseURL": "http://64.226.122.159:3000",
+    "NODE_ENV": "development",
+    "GENERATE_GIFS": false
+  },
+  "script": "bin/www",
+  "ignore_watch": [
+    "node_modules",
+    "output",
+    "public"
+  ],
+  "watch_options": {
+    "followSymlinks": false
+  }
+}
