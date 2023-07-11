@@ -107,7 +107,12 @@ async function getLength(tokenId, isBitten) {
       length: ethers.BigNumber.from(-1)
     }
   }
-  const length = isBitten ? ethers.BigNumber.from(0) : (await contract.lengths(tokenId))
+  let length
+  if (tokenId !== '486') {
+    length = isBitten ? ethers.BigNumber.from(0) : (await contract.lengths(tokenId))
+  } else {
+    length = ethers.BigNumber.from(0)
+  }
   return {
     owner,
     length
