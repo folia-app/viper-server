@@ -82,10 +82,14 @@ async function reverseLookup(address) {
 }
 
 function getProvider() {
-  const provider = new ethers.providers.InfuraProvider(
+  const provider = new ethers.providers.JsonRpcProvider(
+    `https://powerful-crimson-owl.quiknode.pro/${process.env.QUICK_NODE}`,
     getNetwork(),
-    process.env.INFURA_API_KEY,
-  );
+  )
+  // const provider = new ethers.providers.InfuraProvider(
+  //   getNetwork(),
+  //   process.env.INFURA_API_KEY,
+  // );
   return provider
 }
 async function getLength(tokenId, isBitten, returnOwner = false) {
