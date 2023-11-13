@@ -97,13 +97,9 @@ async function getLength(tokenId, isBitten, returnOwner = false) {
   // make sure tokenId is a BigNumber
   tokenId = tokenId.toString()
 
-  const provider = getProvider()
 
   const address = isBitten ? contracts.BiteByViper.networks[getNetworkId()].address : contracts.Viper.networks[getNetworkId()].address
-  const abi = isBitten ? contracts.BiteByViper.abi : contracts.Viper.abi
-  const contract = new ethers.Contract(
-    address, abi, provider
-  )
+
   let owner
   if (returnOwner) {
     try {
@@ -119,6 +115,11 @@ async function getLength(tokenId, isBitten, returnOwner = false) {
   }
   let length
   if (tokenId !== '486') {
+    const provider = getProvider()
+    const abi = isBitten ? contracts.BiteByViper.abi : contracts.Viper.abi
+    const contract = new ethers.Contract(
+      address, abi, provider
+    )
     length = isBitten ? ethers.BigNumber.from(0) : (await contract.lengths(tokenId))
   } else {
     length = ethers.BigNumber.from(0)
@@ -183,6 +184,10 @@ const formatName = function (tokenId, length, preserve = true) {
   return `${paddedTokenId}/${paddedLength}`
 }
 
+async function sleep(time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
 
 // export extractBiteId
-module.exports = { extractBiteId, refreshOpensea, reverseLookup, getLength, getOwner, getOwnerOS, boo, getNetwork, getNetworkId, getProvider, formatName }
+module.exports = { sleep, extractBiteId, refreshOpensea, reverseLookup, getLength, getOwner, getOwnerOS, boo, getNetwork, getNetworkId, getProvider, formatName }

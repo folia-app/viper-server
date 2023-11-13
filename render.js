@@ -118,11 +118,11 @@ const pokeOS = async (tokenId, viperLength) => {
   }
   try {
     const address = contract.networks[getNetwork()].address
-    const instantiaedContract = new ethers.Contract(
-      address,
-      contract.abi,
-      getProvider()
-    )
+    // const instantiaedContract = new ethers.Contract(
+    //   address,
+    //   contract.abi,
+    //   getProvider()
+    // )
     try {
       refreshOpensea(getNetwork(), address, tokenId.toString()).then((response) => {
         console.log(`refresh metadata for ${tokenId} on opensea resulted in ${response.status}`, { response })
