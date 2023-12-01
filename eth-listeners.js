@@ -29,7 +29,7 @@ async function getAllPastEvents() {
   const endingBlock = await getProvider().getBlockNumber()
   const startingBlock = 17666451
   const chunk = 10_000
-  const timeout = 181 // ms
+  const timeout = 500 // ms
   const chunks = Math.ceil((endingBlock - startingBlock) / chunk)
   for (let i = 0; i < chunks; i++) {
     await queryBiteByViper(startingBlock + i * chunk, startingBlock + (i + 1) * chunk)
