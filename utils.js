@@ -73,23 +73,16 @@ var refreshOpensea = function (network, address, tokenID) {
 }
 
 async function reverseLookup(address) {
-  const provider = new ethers.providers.InfuraProvider(
-    "homestead",
-    process.env.INFURA_API_KEY,
-  );
+  const provider = getProvider('homestead')
   const name = await provider.lookupAddress(address)
   return name || address
 }
 
-function getProvider() {
+function getProvider(network = getNetwork()) {
   const provider = new ethers.providers.JsonRpcProvider(
     `https://powerful-crimson-owl.quiknode.pro/${process.env.QUICK_NODE}`,
-    getNetwork(),
+    network,
   )
-  // const provider = new ethers.providers.InfuraProvider(
-  //   getNetwork(),
-  //   process.env.INFURA_API_KEY,
-  // );
   return provider
 }
 async function getLength(tokenId, isBitten, returnOwner = false) {
@@ -136,7 +129,7 @@ async function getOwner(address, tokenId) {
     owner = await getOwnerOS(address, tokenId)
     return owner
   } catch (e) {
-    console.log(`error trying to get owner from OS, going to try getting from infura`, { e })
+    console.log(`error trying to get owner from OS, going to try getting from provider`, { e })
   }
   const provider = getProvider()
   const NFTContract = new ethers.Contract(
