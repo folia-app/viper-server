@@ -31,7 +31,7 @@ function extractBiteId(tokenId) {
     throw new Error(`Invalid originalTokenId ${originalTokenId} for tokenId ${tokenId}`)
   }
   // senderAddress is tokenId masked with 0xffffffffffffffffffffffffffffffffffffffff
-  const senderAddress = tokenId.and("0xffffffffffffffffffffffffffffffffffffffff")
+  const senderAddress = '0x' + (tokenId.and("0xffffffffffffffffffffffffffffffffffffffff").toHexString().replace('0x', '').padStart(40, '0'))
   return { length, originalTokenId, senderAddress }
 }
 
