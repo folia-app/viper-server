@@ -80,7 +80,7 @@ async function reverseLookup(address) {
 
 function getProvider(network = getNetwork()) {
   const provider = new ethers.providers.JsonRpcProvider(
-    `https://powerful-crimson-owl.quiknode.pro/${process.env.QUICK_NODE}`,
+    network == 'homestead' || network == 'mainnet' ? process.env.RPC : process.env.RPC_TEST,
     network,
   )
   return provider

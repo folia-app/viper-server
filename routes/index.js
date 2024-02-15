@@ -49,7 +49,7 @@ router.get('/v1/metadata/*', async function (req, res, next) {
     length: length.toNumber(),
   })
 
-  var animation_url = `${baseURL}/get/iframe#${tokenId}-${length.toString()}` // TODO: change this when we know URL scheme in app
+  var animation_url = `${baseURL}/get/iframe#${tokenId}-${length.toString()}`
   const external_url = 'https://viper.folia.app' + (isBitten ? "" : `/tokens/${tokenId}`)
 
   const viperName = isBitten ? v.allVipers.filter(v => v.tokenId == extractBiteId(tokenId).originalTokenId)[0].name : v.me.name

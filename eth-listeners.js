@@ -29,14 +29,26 @@ async function getAllPastEvents() {
   const endingBlock = await getProvider().getBlockNumber()
   const startingBlock = 17666451
   const chunk = 10_000
-  const timeout = 500 // ms
+
+  const timeout = 10 // ms
   const chunks = Math.ceil((endingBlock - startingBlock) / chunk)
-  for (let i = 0; i < chunks; i++) {
-    await queryBiteByViper(startingBlock + i * chunk, startingBlock + (i + 1) * chunk)
-    await sleep(timeout)
-    await queryViper(startingBlock + i * chunk, startingBlock + (i + 1) * chunk)
-    await sleep(timeout)
+  for (let j = 0; j < 2; j++) {
+    for (let i = 0; i < chunks; i++) {
+      try {
+        if (j == 0) {
+          await queryViper(startingBlock + i * chunk, startingBlock + (i + 1) * chunk)
+          await sleep(timeout)
+        } else {
+          await queryBiteByViper(startingBlock + i * chunk, startingBlock + (i + 1) * chunk)
+          await sleep(timeout)
+        }
+      } catch (e) {
+        console.log('failed to query contract', j == 0 ? 'BiteByViper' : 'Viper', { e })
+        i--
+      }
+    }
   }
+  console.log('getAllPastEvents done')
 }
 
 async function queryBiteByViper(from, to) {
