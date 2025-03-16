@@ -283,26 +283,12 @@ async function getOwner(address, tokenId) {
   try {
     const response = await fetch(makeEndpoint(query, '', false));
     const data = await response.json();
-
-    // Handle different response formats (regular query vs subscription)
-    let results;
-    if (
-      data.block_height !== undefined &&
-      Array.isArray(data.result) &&
-      Array.isArray(data.result[0])
-    ) {
-      // This is the subscription format, transform it to match the expected format for convertEvent
-      results = convertEvent({ data: JSON.stringify({ result: data.result }) });
-    } else {
-      // This is the regular format
-      results = convertEvent({ data: JSON.stringify(data) });
-    }
-
-    if (results.length > 0) {
-      owner = results[0].owner;
+    // {"block_height":22061627,"result":[[["owner"],["0x5115e6d883b88c2393519df59c09c84f26e39439"]]]}
+    console.log({ data });
+    const owner = data.result[0][0][1];
+    if (owner) {
       return owner;
     } else {
-      console.error({ results });
       throw new Error(
         `Could not find owner for token ${tokenId} on contract ${address} using query ${query}`
       );
