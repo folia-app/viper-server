@@ -284,13 +284,13 @@ async function getOwner(address, tokenId) {
     const response = await fetch(makeEndpoint(query, '', false));
     const data = await response.json();
     const results = convertEvent({ data: JSON.stringify(data) });
-
     if (results.length > 0) {
       owner = results[0].owner;
       return owner;
     } else {
+      console.error({ results });
       throw new Error(
-        `Could not find owner for token ${tokenId} on contract ${address}`
+        `Could not find owner for token ${tokenId} on contract ${address} using query ${query}`
       );
     }
   } catch (e) {
