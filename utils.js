@@ -284,11 +284,7 @@ async function getOwner(address, tokenId) {
     const response = await fetch(makeEndpoint(query, transferSig, false));
     const data = await response.json();
     // {"block_height":22061627,"result":[[["owner"],["0x5115e6d883b88c2393519df59c09c84f26e39439"]]]}
-    console.log({ data_result_0: data.result[0] });
-    console.log({ data_result_0_0: data.result[0][1] });
-    console.log({ data_result_0_0_1: data.result[0][1][0] });
     const owner = data.result[0][1][0];
-    console.log({ owner });
     if (owner) {
       return owner;
     } else {
@@ -303,16 +299,18 @@ async function getOwner(address, tokenId) {
 }
 
 async function getOwnerOS(nftContractAddress, tokenId) {
-  const prefix = getNetwork() == 'homestead' ? '' : 'testnets-';
-  // https://testnets-api.opensea.io/v2/chain/sepolia/contract/0xc8a395e3b82e515f88e0ef548124c114f16ce9e3/nfts/1?limit=50
-  const target = `https://${prefix}api.opensea.io/v2/chain/${
-    getNetwork() == 'homestead' ? 'ethereum' : getNetwork()
-  }/contract/${nftContractAddress}/nfts/${tokenId.toString()}?limit=1`;
+  const prefix = getNetwork() == 'ethereum' ? '' : 'testnets-';
+  // https://api.opensea.io/api/v2/chain/amoy/contract/address/nfts/identifier/refresh \
+  const target = `https://testnets-api.opensea.io/v2/chain/${prefix}/contract/${nftContractAddress}/nfts/${tokenId}?limit=50`;
+  // const target = `https://${prefix}api.opensea.io/v2/chain/${
+  //   getNetwork() == 'homestead' ? 'ethereum' : getNetwork()
+  // }/contract/${nftContractAddress}/nfts/${tokenId.toString()}?limit=1`;
+  console.log({ api: process.env.opensea_api });
   const options = {
     method: 'GET',
     headers: {
       accept: 'application/json',
-      'X-API-KEY': process.env.opensea_api,
+      'x-api-key': process.env.opensea_api,
     },
   };
   const request = await fetch(target, options);
