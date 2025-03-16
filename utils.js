@@ -281,7 +281,7 @@ async function getOwner(address, tokenId) {
   `;
 
   try {
-    const response = await fetch(makeEndpoint(query, '', false));
+    const response = await fetch(makeEndpoint(query, transferSig, false));
     const data = await response.json();
     // {"block_height":22061627,"result":[[["owner"],["0x5115e6d883b88c2393519df59c09c84f26e39439"]]]}
     console.log({ data });
