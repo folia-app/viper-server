@@ -285,7 +285,10 @@ async function getOwner(address, tokenId) {
     const data = await response.json();
     // {"block_height":22061627,"result":[[["owner"],["0x5115e6d883b88c2393519df59c09c84f26e39439"]]]}
     console.log({ data_result_0: data.result[0] });
+    console.log({ data_result_0_0: data.result[0][0] });
+    console.log({ data_result_0_0_1: data.result[0][0][1] });
     const owner = data.result[0][0][1];
+    console.log({ owner });
     if (owner) {
       return owner;
     } else {
