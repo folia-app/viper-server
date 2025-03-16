@@ -19,7 +19,7 @@ function getNetworkId() {
 }
 
 // Index Supply API setup
-const API = process.env.INDEX_SUPPLY_API_KEY;
+const API = process.env.VITE_INDEX_SUPPLY_API;
 const chainId = getNetwork() == 'homestead' ? 1 : 11155111;
 
 const makeEndpoint = (query, eventSig, live = true) => {
