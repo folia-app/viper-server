@@ -283,7 +283,21 @@ async function getOwner(address, tokenId) {
   try {
     const response = await fetch(makeEndpoint(query, '', false));
     const data = await response.json();
-    const results = convertEvent({ data: JSON.stringify(data) });
+
+    // Handle different response formats (regular query vs subscription)
+    let results;
+    if (
+      data.block_height !== undefined &&
+      Array.isArray(data.result) &&
+      Array.isArray(data.result[0])
+    ) {
+      // This is the subscription format, transform it to match the expected format for convertEvent
+      results = convertEvent({ data: JSON.stringify({ result: data.result }) });
+    } else {
+      // This is the regular format
+      results = convertEvent({ data: JSON.stringify(data) });
+    }
+
     if (results.length > 0) {
       owner = results[0].owner;
       return owner;
