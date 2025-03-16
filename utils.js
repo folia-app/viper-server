@@ -274,8 +274,8 @@ async function getOwner(address, tokenId) {
   const query = `
     SELECT "to" as owner
     FROM transfer
-    WHERE address = '${address}'
-    AND tokenId = '${tokenId}'
+    WHERE address = ${address}
+    AND tokenId = ${tokenId}
     ORDER BY block_num DESC
     LIMIT 1
   `;
