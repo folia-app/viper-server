@@ -215,7 +215,9 @@ var refreshOpensea = function (network, address, tokenID) {
 async function reverseLookup(address) {
   const ensAPI = process.env.BOT_API || 'https://bot.trifle.life';
   try {
-    const response = await fetch(`${ensAPI}/ens/name?address=${address}`);
+    const response = await fetch(
+      `${ensAPI}/ens/name?address=${address}&exact=true`
+    );
     const data = await response.json();
     return data.name || address;
   } catch (e) {
