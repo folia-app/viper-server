@@ -273,6 +273,16 @@ const generateGif = async function (tokenId, viperLength) {
       console.log(`failed to optimize gif, exited with error:`, { e });
     }
 
+    // Drop the intermediate frames/ dir — only complete.gif is served.
+    try {
+      const framesDir = path.join(path.dirname(filename), 'frames');
+      if (fs.existsSync(framesDir)) {
+        fs.rmSync(framesDir, { recursive: true, force: true });
+      }
+    } catch (e) {
+      console.error('frames prune failed:', e.message);
+    }
+
     // Prune obsolete length-variants for this token to prevent storage bloat.
     // Skip bite dirs (b*) — different bites of the same viper legitimately
     // occupy different length sub-dirs and aren't superseded by newer ones.
