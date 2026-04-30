@@ -13,6 +13,7 @@ router.get('/', function (req, res, next) {
 });
 
 router.get('/v1/metadata/*', async function (req, res, next) {
+  try {
   let tokenId = req.params[0]
   const isBitten = tokenId.length > 4
   // check if tokenId would be accepted by BigNumber as a number
@@ -24,7 +25,7 @@ router.get('/v1/metadata/*', async function (req, res, next) {
 
   const returnOwner = true
   let { owner, length } = await getLength(tokenId, isBitten, returnOwner)
-  if (length.lt(0)) {
+  if (!length || length.lt(0)) {
     return boo(res, "Invalid tokenId")
   } else {
     length = length.add(1)
@@ -126,6 +127,7 @@ router.get('/v1/metadata/*', async function (req, res, next) {
     // sha256: work.sha256 || {}
   }
   res.json(metadata);
+  } catch (e) { next(e) }
 })
 
 // router.get('/all/', async function (req, res, next) {

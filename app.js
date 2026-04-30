@@ -10,7 +10,7 @@ var indexRouter = require('./routes/index');
 var getRouter = require('./routes/get');
 
 var app = express();
-app.use(cors());
+app.use(cors({ exposedHeaders: ['X-Pending'] }));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

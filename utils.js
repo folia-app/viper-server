@@ -89,6 +89,14 @@ function processBiteByViperTransfer(event) {
     console.log(
       `Updated length for Viper #${originalTokenIdStr} to ${newLength}`
     );
+
+    // Pre-warm gif generation for this bite (lazy require avoids circular dep with render.js)
+    try {
+      const { addToQueue } = require('./render.js');
+      addToQueue(tokenId.toString(), length.toNumber());
+    } catch (e) {
+      console.error('Failed to pre-warm bite gif:', e);
+    }
   } catch (e) {
     console.error('Error processing BiteByViper transfer:', e);
   }
@@ -244,6 +252,13 @@ async function getLength(tokenId, isBitten, returnOwner = false) {
 
     if (cachedLength !== undefined) {
       length = ethers.BigNumber.from(cachedLength);
+    } else if (isBitten) {
+      // Length is encoded in the bite tokenId itself; sub(1) because caller adds 1 back
+      try {
+        length = extractBiteId(tokenId).length.sub(1);
+      } catch (e) {
+        length = ethers.BigNumber.from(0);
+      }
     } else {
       console.error(`No cached length for ${tokenId}`);
     }
@@ -299,9 +314,10 @@ async function getOwner(address, tokenId) {
 }
 
 async function getOwnerOS(nftContractAddress, tokenId) {
-  const prefix = getNetwork() == 'ethereum' ? '' : 'testnets-';
-  // https://api.opensea.io/api/v2/chain/amoy/contract/address/nfts/identifier/refresh \
-  const target = `https://testnets-api.opensea.io/v2/chain/${prefix}/contract/${nftContractAddress}/nfts/${tokenId}?limit=50`;
+  const isMainnet = getNetwork() == 'homestead';
+  const host = isMainnet ? 'api.opensea.io' : 'testnets-api.opensea.io';
+  const chain = isMainnet ? 'ethereum' : 'sepolia';
+  const target = `https://${host}/v2/chain/${chain}/contract/${nftContractAddress}/nfts/${tokenId}?limit=50`;
   // const target = `https://${prefix}api.opensea.io/v2/chain/${
   //   getNetwork() == 'homestead' ? 'ethereum' : getNetwork()
   // }/contract/${nftContractAddress}/nfts/${tokenId.toString()}?limit=1`;

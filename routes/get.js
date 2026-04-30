@@ -139,8 +139,10 @@ router.get('/img/*', async function (req, res, next) {
 })
 
 function returnFile(filename, req, res, next) {
-  const cache = (filename.indexOf("viper-loading-loop.gif") > -1 ? (1 / 60) : 15) * 60 // 1 sec or 15 minutes
+  const isPlaceholder = filename.indexOf("viper-loading-loop.gif") > -1
+  const cache = (isPlaceholder ? (1 / 60) : 15) * 60 // 1 sec or 15 minutes
   res.set('Cache-control', `public, max-age=${cache}`)
+  if (isPlaceholder) res.set('X-Pending', 'true')
 
   var options = {
     // root: path.join(__dirname, 'public'),

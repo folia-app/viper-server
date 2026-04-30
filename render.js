@@ -272,6 +272,28 @@ const generateGif = async function (tokenId, viperLength) {
     } catch (e) {
       console.log(`failed to optimize gif, exited with error:`, { e });
     }
+
+    // Prune obsolete length-variants for this token to prevent storage bloat.
+    // Skip bite dirs (b*) — different bites of the same viper legitimately
+    // occupy different length sub-dirs and aren't superseded by newer ones.
+    try {
+      const lengthDir = path.dirname(filename);
+      const tokenDir = path.dirname(lengthDir);
+      const keepLength = path.basename(lengthDir);
+      if (!path.basename(tokenDir).startsWith('b')) {
+        for (const entry of fs.readdirSync(tokenDir)) {
+          if (entry === keepLength) continue;
+          const victim = path.join(tokenDir, entry);
+          if (fs.statSync(victim).isDirectory()) {
+            fs.rmSync(victim, { recursive: true, force: true });
+            console.log(`pruned obsolete variant ${victim}`);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('variant prune failed:', e.message);
+    }
+
     pokeOS(tokenId, viperLength);
 
     console.log(
