@@ -28,18 +28,76 @@ const maxSpawns = process.env.MAX_SPAWNS
 console.log(`max spawns: ${maxSpawns}`);
 const v = new Viper();
 const GENERATE_GIFS = process.env.GENERATE_GIFS == 'true' ? true : false;
-const preload = GENERATE_GIFS ? v.allVipers.length : 0;
-const minLength = 1;
-const maxLength = getNetwork() == 'homestead' ? 1 : 1;
-
 let totalTime = 0;
 let numberOfVipers = 0;
 
-for (let j = minLength; j <= maxLength; j++) {
-  for (let i = 1; i <= preload; i++) {
-    queue.push(formatName(i, j));
+/**
+ * Queue every asset that is missing, and nothing else.
+ *
+ * The old boot queue asked for `<tokenId>/001` for all 486 vipers regardless of
+ * their actual length. Most of those are historical lengths that no route will
+ * ever request — the img route serves a viper at its *current* length — so the
+ * queue stayed hundreds deep generating images nobody would see, which is why
+ * this box has rendered continuously for three years.
+ *
+ * The indexer already knows the exact set that will be requested: every viper at
+ * its current length, and every bite at the length encoded in its token id. Diff
+ * that against disk and queue only the gap. Measured against production the gap
+ * is 12 of 1,025 — so a normal boot has nothing to do, and we still never sit
+ * without a complete set.
+ */
+async function queueMissingAssets() {
+  const indexerModule = require('./indexer.js');
+
+  if (!GENERATE_GIFS) {
+    console.log('[assets] GENERATE_GIFS is false — not queueing anything');
+    return;
+  }
+
+  if (!indexerModule.isEnabled()) {
+    // No indexer to ask; fall back to the old behaviour so nothing regresses.
+    console.log('[assets] indexer disabled — falling back to legacy preload');
+    for (let i = 1; i <= v.allVipers.length; i++) queue.push(formatName(i, 1));
+    return;
+  }
+
+  const indexer = indexerModule.get();
+  await indexer.ready();
+  const state = indexer.getState();
+
+  // (tokenId, length) pairs exactly as the serving routes will ask for them
+  const wanted = [
+    ...state.vipers.map((x) => [x.tokenId, x.length]),
+    ...state.bites.map((x) => [x.tokenId, x.length]),
+  ];
+
+  const dirPrefix =
+    'public/' +
+    (getNetwork() == 'homestead' ? '' : getNetwork() + '-') +
+    'gifs/';
+
+  const missing = wanted.filter(([tokenId, length]) => {
+    const file = path.join(
+      __dirname,
+      dirPrefix + formatName(tokenId, length, false) + '/complete.gif'
+    );
+    return !fs.existsSync(file);
+  });
+
+  console.log(
+    `[assets] ${wanted.length} expected, ${wanted.length - missing.length} present, ${missing.length} missing`
+  );
+
+  for (const [tokenId, length] of missing) {
+    queue.push(formatName(tokenId, length));
+    console.log(`[assets] queued missing ${formatName(tokenId, length, false)}`);
   }
 }
+
+// Deferred so the indexer has a chance to finish its backfill first.
+queueMissingAssets().catch((e) =>
+  console.error('[assets] gap scan failed:', e)
+);
 
 const queueChecker = setInterval(() => {
   if (lastCheckedQueueLength !== queue.length) {
