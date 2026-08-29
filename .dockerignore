@@ -1,0 +1,13 @@
+# Build context hygiene. public/ alone is 8.3 GB of rendered GIFs locally —
+# without this the build context transfer would dwarf the image.
+node_modules
+data
+public
+views
+firstframes
+dist
+*.log
+.env
+.env.*
+.git
+.DS_Store

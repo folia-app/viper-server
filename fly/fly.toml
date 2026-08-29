@@ -1,0 +1,42 @@
+# Viper chain indexer — the /v1 API, no rendering.
+#
+# Unlike the renderers this cannot scale to zero: it holds two outbound
+# WebSocket subscriptions and a 30s reconciler, so it needs one machine always
+# running. That is the single always-on cost in the whole plan.
+#
+# There is no volume on purpose. The log store is a rebuildable cache — a full
+# backfill from chain takes about 8 seconds — so the machine stays stateless
+# and a restart re-derives rather than restoring.
+
+app            = "folia-viper-indexer"
+primary_region = "fra"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  network         = "homestead"
+  INDEXER         = "true"
+  INDEXER_SOURCE  = "true"
+  INDEXSUPPLY     = "false"
+  INDEXER_DB      = "/tmp/viper-index.json"
+  NODE_ENV        = "production"
+
+[http_service]
+  internal_port        = 8080
+  force_https          = true
+  auto_stop_machines   = false
+  auto_start_machines  = true
+  min_machines_running = 1
+  processes            = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "45s"
+    interval     = "30s"
+    method       = "GET"
+    timeout      = "5s"
+    path         = "/healthz"
+
+[[vm]]
+  size   = "shared-cpu-1x"
+  memory = "512mb"

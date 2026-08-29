@@ -1,0 +1,16 @@
+{
+  "name": "viper-indexer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Viper chain indexer — /v1/state, /v1/stream, /v1/status",
+  "main": "indexer-server.js",
+  "scripts": { "start": "node indexer-server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "viper-contracts": "git+https://github.com/folia-app/viper-contracts.git#173b5f25b1988b113a38ee1ecf5e5cc5afbabfee",
+    "ws": "^8.18.0"
+  }
+}
