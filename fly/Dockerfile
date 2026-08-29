@@ -24,7 +24,7 @@ ENV NODE_ENV=production \
     INDEXER=true \
     INDEXER_SOURCE=true \
     INDEXSUPPLY=false \
-    INDEXER_DB=/tmp/viper-index.json
+    INDEXER_DB=/data/viper-index.json
 
 EXPOSE 8080
 CMD ["node", "indexer-server.js"]

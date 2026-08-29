@@ -7,9 +7,11 @@
  * any modern Node, while canvas and node-p5 stay behind on the box that needs
  * them until their renderers get the golden-image treatment.
  *
- * There is deliberately no persistent volume. The log store is a rebuildable
- * cache — a full backfill from chain takes about eight seconds — so a restart
- * re-derives rather than restoring, and the machine stays stateless.
+ * The log store sits on a small volume. It is still a rebuildable cache — a
+ * full backfill takes about eight seconds — but persisting it turns a restart
+ * into a one-second resume from the watermark, and removes the dependency on an
+ * RPC provider answering at boot. If the volume is ever lost the service
+ * rebuilds from chain on its own.
  */
 
 require('dotenv').config();
@@ -18,7 +20,7 @@ require('dotenv').config();
 process.env.INDEXER = 'true';
 process.env.INDEXER_SOURCE = 'true';
 process.env.INDEXSUPPLY = process.env.INDEXSUPPLY || 'false';
-process.env.INDEXER_DB = process.env.INDEXER_DB || '/tmp/viper-index.json';
+process.env.INDEXER_DB = process.env.INDEXER_DB || '/data/viper-index.json';
 
 const express = require('express');
 const cors = require('cors');

@@ -4,9 +4,11 @@
 # WebSocket subscriptions and a 30s reconciler, so it needs one machine always
 # running. That is the single always-on cost in the whole plan.
 #
-# There is no volume on purpose. The log store is a rebuildable cache — a full
-# backfill from chain takes about 8 seconds — so the machine stays stateless
-# and a restart re-derives rather than restoring.
+# The log store lives on a small volume. It is still a rebuildable cache — a
+# full backfill takes about 8 seconds — but persisting it means a restart
+# resumes from its watermark in about a second instead of re-indexing, and the
+# service does not depend on an RPC provider answering at boot. The rebuild
+# path stays as the fallback if the volume is ever lost.
 
 app            = "folia-viper-indexer"
 primary_region = "fra"
@@ -19,7 +21,7 @@ primary_region = "fra"
   INDEXER         = "true"
   INDEXER_SOURCE  = "true"
   INDEXSUPPLY     = "false"
-  INDEXER_DB      = "/tmp/viper-index.json"
+  INDEXER_DB      = "/data/viper-index.json"
   NODE_ENV        = "production"
 
 [http_service]
@@ -36,6 +38,10 @@ primary_region = "fra"
     method       = "GET"
     timeout      = "5s"
     path         = "/healthz"
+
+[[mounts]]
+  source      = "viper_index"
+  destination = "/data"
 
 [[vm]]
   size   = "shared-cpu-1x"
