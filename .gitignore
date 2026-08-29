@@ -15,3 +15,5 @@ public/old/
 public/old-2/
 
 .env.local
+# indexer log store
+data/

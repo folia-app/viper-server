@@ -1,6 +1,8 @@
 const { ethers } = require('ethers');
 const contracts = require('viper-contracts');
 const { EventSource } = require('eventsource');
+const { extractBiteId: extractBiteIdRaw } = require('./lib/bite');
+const indexerModule = require('./indexer');
 
 // Cache to store the length of each token
 const tokenLengths = new Map();
@@ -44,29 +46,16 @@ const convertEvent = (event) => {
   });
 };
 
+// Single source of truth for the bit math now lives in lib/bite.js (plain
+// BigInt, no ethers). This wrapper keeps the BigNumber-shaped return value the
+// existing callers in routes/ and render.js depend on.
 function extractBiteId(tokenId) {
-  tokenId = ethers.BigNumber.from(tokenId);
-  // length is tokenId bit shifted right 169 bits
-  const length = tokenId.shr(169);
-  if (length.lt(1)) {
-    throw new Error(`Invalid length ${length} for tokenId ${tokenId}`);
-  }
-  // originalTokenId is tokenId bit shifted right 160 bits and then masked with 0x1ff
-  const originalTokenId = tokenId.shr(160).and(0x1ff);
-  if (originalTokenId.lt(1) || originalTokenId.gt(486)) {
-    throw new Error(
-      `Invalid originalTokenId ${originalTokenId} for tokenId ${tokenId}`
-    );
-  }
-  // senderAddress is tokenId masked with 0xffffffffffffffffffffffffffffffffffffffff
-  const senderAddress =
-    '0x' +
-    tokenId
-      .and('0xffffffffffffffffffffffffffffffffffffffff')
-      .toHexString()
-      .replace('0x', '')
-      .padStart(40, '0');
-  return { length, originalTokenId, senderAddress };
+  const raw = extractBiteIdRaw(tokenId);
+  return {
+    length: ethers.BigNumber.from(raw.length.toString()),
+    originalTokenId: ethers.BigNumber.from(raw.originalTokenId.toString()),
+    senderAddress: raw.senderAddress,
+  };
 }
 
 // Process a BiteByViper transfer event to update token lengths
@@ -90,12 +79,17 @@ function processBiteByViperTransfer(event) {
       `Updated length for Viper #${originalTokenIdStr} to ${newLength}`
     );
 
-    // Pre-warm gif generation for this bite (lazy require avoids circular dep with render.js)
+    // Pre-warm gif generation (lazy require avoids circular dep with render.js)
     try {
       const { addToQueue } = require('./render.js');
       addToQueue(tokenId.toString(), length.toNumber());
+      // ...and the Viper that did the biting, whose own image changes because
+      // its length just went up. The pre-Index-Supply listener queued both;
+      // only the bite survived that migration, so until now a freshly-bitten
+      // Viper served a placeholder to whoever looked at it first.
+      addToQueue(originalTokenIdStr, newLength + 1);
     } catch (e) {
-      console.error('Failed to pre-warm bite gif:', e);
+      console.error('Failed to pre-warm gifs:', e);
     }
   } catch (e) {
     console.error('Error processing BiteByViper transfer:', e);
@@ -137,11 +131,22 @@ const onMsg = (msg) => {
 
 async function init() {
   if (isSubscribed) return;
+
+  // A missing or unknown `network` used to throw straight out of module load
+  // and print a bare TypeError; fail with something readable instead.
+  const deployment = contracts.Viper.networks[getNetworkId()];
+  const biteDeployment = contracts.BiteByViper.networks[getNetworkId()];
+  if (!deployment || !biteDeployment) {
+    console.error(
+      `[utils] no Viper/BiteByViper deployment for network "${getNetwork()}" — Index Supply subscription not started`
+    );
+    return;
+  }
+
   isSubscribed = true;
 
-  const viperAddress = contracts.Viper.networks[getNetworkId()].address;
-  const biteByViperAddress =
-    contracts.BiteByViper.networks[getNetworkId()].address;
+  const viperAddress = deployment.address;
+  const biteByViperAddress = biteDeployment.address;
 
   const queryBoth = `
     SELECT "from", "to", tokenId, address, block_num, tx_hash
@@ -161,8 +166,14 @@ async function init() {
   console.log('Subscribed to transfer events');
 }
 
-// Initialize on module load
-init().catch(console.error);
+// Initialize on module load. Still on by default: the Index Supply stream stays
+// authoritative until INDEXER_SOURCE=true says otherwise. Set INDEXSUPPLY=false
+// to run on the local indexer alone.
+if (process.env.INDEXSUPPLY !== 'false') {
+  init().catch(console.error);
+} else {
+  console.log('[utils] Index Supply subscription disabled (INDEXSUPPLY=false)');
+}
 
 var refreshOpensea = function (network, address, tokenID) {
   if (network !== 'homestead')
@@ -247,35 +258,67 @@ async function getLength(tokenId, isBitten, returnOwner = false) {
     }
   }
 
-  let length;
-  if (tokenId !== '486') {
-    // Get the cached length for this token
-    const cachedLength = tokenLengths.get(tokenId);
-
-    if (cachedLength !== undefined) {
-      length = ethers.BigNumber.from(cachedLength);
-    } else if (isBitten) {
-      // Length is encoded in the bite tokenId itself; sub(1) because caller adds 1 back
-      try {
-        length = extractBiteId(tokenId).length.sub(1);
-      } catch (e) {
-        length = ethers.BigNumber.from(0);
-      }
-    } else {
-      console.error(`No cached length for ${tokenId}`);
-    }
-  } else {
-    // Token ID 486 always has length 0
-    length = ethers.BigNumber.from(0);
-  }
-
   return {
     owner,
-    length,
+    length: resolveLength(tokenId, isBitten),
   };
 }
 
+/**
+ * Zero-indexed length; every caller adds 1 before displaying it.
+ *
+ * Order of preference:
+ *   1. the local indexer, when it is authoritative
+ *   2. the in-memory map fed by the Index Supply stream
+ *   3. a deterministic default
+ *
+ * Step 3 is a fix. Previously a bite with a cold cache derived its length from
+ * its own token id while a warm cache returned 0, so a bite's reported Length
+ * flipped between its bite number and 1 depending on how long the server had
+ * been up. Production has served 1 since launch, so 1 is what it returns now,
+ * consistently.
+ */
+function resolveLength(tokenId, isBitten) {
+  tokenId = tokenId.toString();
+
+  // Token 486 is fixed at length 0 by design.
+  if (tokenId === '486') return ethers.BigNumber.from(0);
+
+  if (indexerModule.isAuthoritative()) {
+    try {
+      const fromIndex = indexerModule.get().lengthFor(tokenId, isBitten);
+      if (fromIndex !== null && fromIndex !== undefined) {
+        return ethers.BigNumber.from(fromIndex);
+      }
+    } catch (e) {
+      console.warn('indexer length lookup failed, falling back:', e.message);
+    }
+  }
+
+  const cachedLength = tokenLengths.get(tokenId);
+  if (cachedLength !== undefined) return ethers.BigNumber.from(cachedLength);
+
+  // Bites are always reported as length 0 here (Length 1 once the caller adds
+  // one), matching what the warm path has always returned.
+  if (isBitten) return ethers.BigNumber.from(0);
+
+  console.error(`No length available for ${tokenId}`);
+  return undefined;
+}
+
 async function getOwner(address, tokenId) {
+  // The local log table knows the owner without a network call. Asking OpenSea
+  // on every metadata request meant their rate limiter could 404 our own
+  // tokens; this removes them from the request path entirely.
+  if (indexerModule.isAuthoritative()) {
+    try {
+      const fromIndex = indexerModule.get().ownerOf(address, tokenId);
+      if (fromIndex) return fromIndex;
+    } catch (e) {
+      console.warn('indexer owner lookup failed, falling back:', e.message);
+    }
+  }
+
   let owner;
   try {
     owner = await getOwnerOS(address, tokenId);
@@ -367,6 +410,7 @@ async function sleep(time) {
 // export extractBiteId
 module.exports = {
   sleep,
+  resolveLength,
   extractBiteId,
   refreshOpensea,
   reverseLookup,

@@ -5,7 +5,12 @@
   "author": "okwme",
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "pm2 start bin/www --watch"
+    "dev": "pm2 start bin/www --watch",
+    "test": "node scripts/test-indexer.js && node scripts/smoke.js",
+    "test:unit": "node scripts/test-indexer.js",
+    "test:smoke": "node scripts/smoke.js",
+    "verify": "node scripts/verify-parity.js --index-supply --all",
+    "indexer:status": "node -e \"fetch(`http://127.0.0.1:${process.env.PORT||3001}/v1/status`).then(r=>r.json()).then(o=>console.log(JSON.stringify(o,null,2)))\""
   },
   "license": "ISC",
   "dependencies": {
@@ -21,6 +26,7 @@
     "jade": "~1.11.0",
     "morgan": "~1.9.1",
     "viper": "git+ssh://git@github.com/folia-app/viper.git#76bbe044dd55779618ae64b10e2917b563033244",
-    "viper-contracts": "git+ssh://git@github.com/folia-app/viper-contracts.git#173b5f25b1988b113a38ee1ecf5e5cc5afbabfee"
+    "viper-contracts": "git+ssh://git@github.com/folia-app/viper-contracts.git#173b5f25b1988b113a38ee1ecf5e5cc5afbabfee",
+    "ws": ">=7.4.6"
   }
 }
