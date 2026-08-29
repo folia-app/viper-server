@@ -16,8 +16,12 @@ process.env.INDEXER = 'true';
 process.env.INDEXER_SOURCE = 'true';
 process.env.INDEXSUPPLY = 'false';
 process.env.GENERATE_GIFS = process.env.GENERATE_GIFS || 'false';
-// Use a dedicated database so injecting a synthetic event below can never
-// touch the real index.
+
+require('dotenv').config();
+
+// Dedicated store so injecting a synthetic event below can never touch the
+// real index. Named after the network, which is only known once dotenv has
+// run — computing this earlier mislabelled a sepolia run as homestead.
 process.env.INDEXER_DB =
   process.env.INDEXER_DB ||
   require('path').join(
@@ -26,8 +30,6 @@ process.env.INDEXER_DB =
     'data',
     `smoke-${process.env.network || 'homestead'}.json`
   );
-
-require('dotenv').config();
 
 const http = require('http');
 const app = require('../app');
