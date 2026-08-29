@@ -79,8 +79,28 @@ class Indexer extends EventEmitter {
     return this._readyPromise;
   }
 
-  ready() {
-    return this._readyPromise || Promise.reject(new Error('indexer not started'));
+  /**
+   * Resolves once the backfill has completed.
+   *
+   * Tolerates being called before start(): app.js requires the routes — and so
+   * render.js — several lines before it starts the indexer, so a caller that
+   * loads early would otherwise get an immediate rejection and silently skip
+   * its work. Waits for start() instead, with a bounded timeout.
+   */
+  ready({ waitForStartMs = 120000 } = {}) {
+    if (this._readyPromise) return this._readyPromise;
+
+    return new Promise((resolve, reject) => {
+      const deadline = Date.now() + waitForStartMs;
+      const poll = () => {
+        if (this._readyPromise) return this._readyPromise.then(resolve, reject);
+        if (Date.now() > deadline) {
+          return reject(new Error('indexer was never started'));
+        }
+        setTimeout(poll, 250).unref?.();
+      };
+      poll();
+    });
   }
 
   stop() {
