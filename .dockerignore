@@ -2,7 +2,14 @@
 # without this the build context transfer would dwarf the image.
 node_modules
 data
-public
+# public/ holds the loading placeholder, the font and 486.png which the
+# renderer needs; only the rendered-gif directories are excluded.
+public/gifs
+public/_gifs_local
+public/*-gifs
+public/gifs-*
+public/old
+public/old-2
 views
 firstframes
 dist

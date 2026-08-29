@@ -1,0 +1,36 @@
+# Viper renderer — metadata and GIFs.
+#
+# The counterpart to fly/Dockerfile: that one is the indexer and has no native
+# dependencies; this one has all of them. Node 18 with canvas 2.11.2 and the
+# node-p5 fork, plus gifsicle 1.93 pinned explicitly — render.js post-processes
+# every GIF with `gifsicle -b -O2`, and optimiser output can differ between
+# versions, so it is as much a pin as canvas is.
+#
+# The rendered GIFs live on a volume, migrated from the droplet rather than
+# regenerated: there are 1,030 of them and each takes roughly 40 seconds.
+FROM node:18-bookworm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential pkg-config python3 git ca-certificates \
+    libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+# gifsicle pinned to the version the droplet has
+RUN set -eux; \
+    apt-get update; apt-get install -y --no-install-recommends gifsicle; \
+    gifsicle --version | head -1; \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY fly/package.render.json ./package.json
+RUN npm install --omit=dev --no-audit --no-fund
+
+COPY . .
+
+COPY fly/entrypoint-render.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENV NODE_ENV=production PORT=3001
+EXPOSE 3001
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["node", "./bin/www"]

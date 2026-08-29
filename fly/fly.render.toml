@@ -1,0 +1,40 @@
+# Viper renderer — metadata and GIFs. The indexer is a separate app.
+#
+# Not scale-to-zero yet: render.js runs a gap scan at boot and a queue checker
+# on an interval. With the media migrated the gap is normally empty, so this
+# could sleep — but prove that before relying on it.
+
+app            = "folia-viper-render"
+primary_region = "fra"
+
+[build]
+  dockerfile = "Dockerfile.render"
+
+[env]
+  NODE_ENV       = "production"
+  PORT           = "3001"
+  network        = "homestead"
+  baseURL        = "https://viper.folia.app/api"
+  GENERATE_GIFS  = "true"
+  MAX_SPAWNS     = "1"
+  SERVERS        = "1"
+  LISTEN         = "true"
+  INDEXER        = "true"
+  INDEXER_SOURCE = "true"
+  INDEXSUPPLY    = "false"
+  INDEXER_DB     = "/data/viper-index.json"
+
+[http_service]
+  internal_port        = 3001
+  force_https          = true
+  auto_stop_machines   = false
+  auto_start_machines  = true
+  min_machines_running = 1
+
+[[mounts]]
+  source      = "viper_media"
+  destination = "/data"
+
+[[vm]]
+  size   = "shared-cpu-1x"
+  memory = "2048mb"
