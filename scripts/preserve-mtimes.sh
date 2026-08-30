@@ -29,8 +29,14 @@ case "${1:-}" in
     {
       echo '#!/bin/sh'
       echo 'n=0'
-      awk -v d="$DEST" '{ t=$1; $1=""; sub(/^ /,""); printf "touch -d @%s \"%s/%s\" 2>/dev/null && n=$((n+1))\n", t, d, $0 }'
-      echo 'echo "restored $n mtimes"'
+      echo 'miss=0'
+      # -c matters: plain touch CREATES a missing file. Applied against a volume
+      # whose upload silently failed, that turns an empty directory into a
+      # directory of plausible-looking zero-byte files and reports success.
+      # Count the misses too, so a failed transfer is loud rather than pretty.
+      awk -v d="$DEST" '{ t=$1; $1=""; sub(/^ /,""); printf "if [ -f \"%s/%s\" ]; then touch -c -d @%s \"%s/%s\" && n=$((n+1)); else miss=$((miss+1)); fi\n", d, $0, t, d, $0 }'
+      echo 'echo "restored $n mtimes, $miss missing"'
+      echo '[ "$miss" -eq 0 ] || exit 3'
     } > "$TMP"
     flyctl ssh console -a "$APP" -C "sh -c 'rm -f /data/.mtimes.sh'" >/dev/null 2>&1 || true
     flyctl ssh sftp put "$TMP" /data/.mtimes.sh -a "$APP" >/dev/null
