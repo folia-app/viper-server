@@ -19,6 +19,11 @@ COPY indexer.js indexer-server.js ./
 COPY lib ./lib
 COPY routes/v1.js ./routes/v1.js
 
+ARG GIT_SHA=unknown
+ARG GIT_DIRTY=false
+ARG BUILD_TIME=
+ENV GIT_SHA=$GIT_SHA GIT_DIRTY=$GIT_DIRTY BUILD_TIME=$BUILD_TIME
+
 ENV NODE_ENV=production \
     PORT=8080 \
     INDEXER=true \

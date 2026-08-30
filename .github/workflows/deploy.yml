@@ -1,0 +1,53 @@
+# Deploy to Fly on push, so what runs is always a commit that exists in git.
+#
+# Needs FLY_API_TOKEN in the repo secrets:
+#   flyctl tokens create deploy -a folia-viper-indexer
+#   flyctl tokens create deploy -a folia-viper-render
+name: deploy
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - app: folia-viper-indexer
+            config: fly/fly.toml
+            dockerfile: fly/Dockerfile
+          - app: folia-viper-render
+            config: fly/fly.render.toml
+            dockerfile: fly/Dockerfile.render
+    concurrency:
+      group: deploy-${{ matrix.app }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl deploy \
+            --config "${{ matrix.config }}" \
+            --dockerfile "${{ matrix.dockerfile }}" \
+            --app "${{ matrix.app }}" \
+            --build-arg "GIT_SHA=${GITHUB_SHA::7}" \
+            --build-arg "GIT_DIRTY=false" \
+            --build-arg "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --ha=false --yes
+      - name: Verify the deploy reports the commit it came from
+        run: |
+          HOST="https://${{ matrix.app }}.fly.dev"
+          for i in $(seq 1 30); do
+            GOT=$(curl -fsS -m 10 "$HOST/v1/version" | sed -n 's/.*"commit":"\([^"]*\)".*/\1/p') || GOT=""
+            [ "$GOT" = "${GITHUB_SHA::7}" ] && echo "$HOST is running ${GITHUB_SHA::7}" && exit 0
+            sleep 10
+          done
+          echo "deployed commit never appeared at $HOST/v1/version" >&2
+          exit 1

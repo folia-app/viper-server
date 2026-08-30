@@ -125,6 +125,21 @@ router.get('/stream', requireIndexer, async function (req, res, next) {
   res.on('close', cleanup);
 });
 
+/**
+ * What is actually running. Deploys used to be untraceable — an image could be
+ * built from a dirty working tree and nothing recorded which commit it came
+ * from. GIT_SHA is baked in at build time by scripts/deploy.sh and CI.
+ */
+router.get('/version', function (req, res) {
+  res.json({
+    commit: process.env.GIT_SHA || 'unknown',
+    dirty: process.env.GIT_DIRTY === 'true',
+    builtAt: process.env.BUILD_TIME || null,
+    node: process.version,
+    network: require('../lib/chain').getNetwork(),
+  });
+});
+
 router.get('/status', function (req, res) {
   if (!indexerModule.isEnabled()) {
     return res.json({ enabled: false, authoritative: false });

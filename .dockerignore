@@ -10,9 +10,7 @@ public/*-gifs
 public/gifs-*
 public/old
 public/old-2
-views
 firstframes
-dist
 *.log
 .env
 .env.*

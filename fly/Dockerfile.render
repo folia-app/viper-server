@@ -27,8 +27,21 @@ RUN npm install --omit=dev --no-audit --no-fund
 
 COPY . .
 
+# The viper package runs `npx webpack --mode production` as a postinstall, so its
+# dist/ is rebuilt on every install with whatever webpack npx resolves that day —
+# the bundle the droplet serves cannot be reproduced from source, even at the
+# same commit. vendor/viper-dist is the exact artifact production has been
+# serving, checked into git, copied over the postinstall output so the iframe is
+# byte-identical and stays that way across rebuilds.
+COPY vendor/viper-dist/ /app/node_modules/viper/dist/
+
 COPY fly/entrypoint-render.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ARG GIT_SHA=unknown
+ARG GIT_DIRTY=false
+ARG BUILD_TIME=
+ENV GIT_SHA=$GIT_SHA GIT_DIRTY=$GIT_DIRTY BUILD_TIME=$BUILD_TIME
 
 ENV NODE_ENV=production PORT=3001
 EXPOSE 3001
