@@ -1,8 +1,10 @@
 # Deploy to Fly on push, so what runs is always a commit that exists in git.
 #
-# Needs FLY_API_TOKEN in the repo secrets:
-#   flyctl tokens create deploy -a folia-viper-indexer
-#   flyctl tokens create deploy -a folia-viper-render
+# Needs one deploy token per app in the repo secrets, rather than a single
+# token that can deploy both — a token scoped to one app cannot be used to
+# redeploy the other if it leaks:
+#   gh secret set FLY_TOKEN_INDEXER -b "$(flyctl tokens create deploy -a folia-viper-indexer)"
+#   gh secret set FLY_TOKEN_RENDER  -b "$(flyctl tokens create deploy -a folia-viper-render)"
 name: deploy
 
 on:
@@ -20,9 +22,11 @@ jobs:
           - app: folia-viper-indexer
             config: fly/fly.toml
             dockerfile: fly/Dockerfile
+            token: FLY_TOKEN_INDEXER
           - app: folia-viper-render
             config: fly/fly.render.toml
             dockerfile: fly/Dockerfile.render
+            token: FLY_TOKEN_RENDER
     concurrency:
       group: deploy-${{ matrix.app }}
       cancel-in-progress: false
@@ -31,7 +35,7 @@ jobs:
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Deploy
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_API_TOKEN: ${{ secrets[matrix.token] }}
         run: |
           flyctl deploy \
             --config "${{ matrix.config }}" \
