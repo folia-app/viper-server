@@ -23,7 +23,9 @@ RUN set -eux; \
 
 WORKDIR /app
 COPY fly/package.render.json ./package.json
-RUN npm install --omit=dev --no-audit --no-fund
+COPY fly/package-lock.render.json ./package-lock.json
+# ci, not install: see fly/Dockerfile.
+RUN npm ci --omit=dev --no-audit --no-fund
 
 COPY . .
 

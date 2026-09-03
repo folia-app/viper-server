@@ -6,7 +6,6 @@ output/*
 .env
 raw/*
 json/
-yarn.lock
 
 public/gifs/
 public/*-gifs/

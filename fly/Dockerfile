@@ -12,7 +12,10 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY fly/package.json ./package.json
-RUN npm install --omit=dev --no-audit --no-fund \
+COPY fly/package-lock.json ./package-lock.json
+# ci, not install: install re-resolves every range on each build, so two
+# deploys of the same commit could ship different dependencies.
+RUN npm ci --omit=dev --no-audit --no-fund \
  && apt-get purge -y git && apt-get autoremove -y
 
 COPY indexer.js indexer-server.js ./

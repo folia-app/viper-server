@@ -21,10 +21,9 @@
     "ethers": "^5.2.0",
     "eventsource": "^3.0.5",
     "express": "~4.16.1",
-    "git": "^0.1.5",
     "http-errors": "~1.6.3",
-    "jade": "~1.11.0",
     "morgan": "~1.9.1",
+    "pug": "^3.0.3",
     "viper": "git+ssh://git@github.com/folia-app/viper.git#76bbe044dd55779618ae64b10e2917b563033244",
     "viper-contracts": "git+ssh://git@github.com/folia-app/viper-contracts.git#173b5f25b1988b113a38ee1ecf5e5cc5afbabfee",
     "ws": ">=7.4.6"
