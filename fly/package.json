@@ -12,5 +12,21 @@
     "express": "^4.21.2",
     "viper-contracts": "git+https://github.com/folia-app/viper-contracts.git#173b5f25b1988b113a38ee1ecf5e5cc5afbabfee",
     "ws": "^8.18.0"
+  },
+  "_overrides_comment": [
+    "Transitive-only security bumps. Nothing above changes: express stays",
+    "^4.21.2 and viper-contracts stays at its pinned commit; these force the",
+    "patched versions of packages those two pull in.",
+    "",
+    "bn.js is scoped to ethjs-unit and number-to-bn deliberately. A bare",
+    "'bn.js': '4.12.3' also drags web3-utils down from the ^5.2.1 it declares,",
+    "which npm applies without complaint -- the hoisted 5.2.5 disappears and",
+    "web3-utils gets a 4.x it was never written against."
+  ],
+  "overrides": {
+    "proxy-addr": "2.0.8",
+    "qs": "6.16.0",
+    "ethjs-unit": { "bn.js": "4.12.3" },
+    "number-to-bn": { "bn.js": "4.12.3" }
   }
 }
